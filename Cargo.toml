@@ -1,0 +1,20 @@
+[package]
+name = "macroquad-sandbox"
+version = "0.1.0"
+edition = "2021"
+authors = ["Krzysztof Langner <klangner@gmail.com>"]
+description = "macroquad examples"
+license = "MIT OR Apache-2.0"
+
+
+[dependencies]
+macroquad = "0.3"
+mapgen = "0.5"
+rand = "0.8"
+
+
+[dev-dependencies]
+
+
+[[example]]
+name = "map_viewer"
