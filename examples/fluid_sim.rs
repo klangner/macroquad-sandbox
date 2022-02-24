@@ -12,30 +12,43 @@ const UNIVERSE_WIDTH: usize = 10;
 const UNIVERSE_HEIGHT: usize = 10;
 
 
-fn plot_velocities(universe: &Universe) {
-    let margin: f32 = 5.;
-    let max_width = screen_width() - 2. * margin;
-    let max_height = screen_height() - 2. * margin;
-    let cell_dx =  max_width / universe.width() as f32;
-    let cell_dy = max_height / universe.height() as f32;
+fn plot_universe(universe: &Universe) {
+    let cell_dx =  screen_width() / universe.width() as f32;
+    let cell_dy = screen_height() / universe.height() as f32;
 
+    clear_background(BLACK);
+
+    // Grid
+    for i in 1..universe.width() {
+        let x = i as f32 * cell_dx + 5.;
+        draw_line(x, 0.0, x, screen_height(), 1.0, DARKGRAY)
+    }
+    for i in 1..universe.height() {
+        let y = i as f32 * cell_dy + 5.;
+        draw_line(0.0, y, screen_width(), y, 1.0, DARKGRAY)
+    }
+
+    // Densities
     for x in 0..universe.width() {
         for y in 0..universe.height() {
-            let cx = margin + cell_dx / 2. + x as f32 * cell_dx;
-            let cy = margin + cell_dy / 2. + y as f32 * cell_dy;
-            draw_circle(cx, cy, 5., BLUE);
+            let cx = x as f32 * cell_dx;
+            let cy = y as f32 * cell_dy;
+            let intensity = universe.density_at(x, y);
+            let color = Color::new(intensity, intensity, intensity, 1.00);
+            draw_rectangle(cx+1.0, cy+1.0, cell_dx-2.0, cell_dy-2.0, color);
         }
     }
-}
 
-fn plot_densities(universe: &Universe) {
-
-}
-
-fn plot_universe(universe: &Universe) {
-    plot_grid(universe.width(), universe.height());
-    plot_densities(&universe);
-    plot_velocities(&universe);
+    // Velocities
+    for x in 0..universe.width() {
+        for y in 0..universe.height() {
+            let cx = cell_dx / 2. + x as f32 * cell_dx;
+            let cy = cell_dy / 2. + y as f32 * cell_dy;
+            let v = universe.velocity_at(x, y);
+            draw_circle(cx, cy, 2., BLUE);
+            draw_line(cx, cy, cx+v.x*cell_dx/2.0, cy+v.y*cell_dy/2.0, 1.0, RED);
+        }
+    }
 }
 
 

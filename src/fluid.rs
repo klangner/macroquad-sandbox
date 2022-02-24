@@ -1,9 +1,9 @@
 // Fluid sim implementation
 
-#[derive(Clone)]
+#[derive(Copy, Clone)]
 pub struct Vec2d {
-    x: f32,
-    y: f32,
+    pub x: f32,
+    pub y: f32,
 }
 
 pub struct Universe {
@@ -36,5 +36,17 @@ impl Universe {
 
     pub fn height(&self) -> usize {
         self.height
+    }
+
+    pub fn density_at(&self, x: usize, y: usize) -> f32 {
+       self.densities[self.xy_idx(x, y)] 
+    }
+
+    pub fn velocity_at(&self, x: usize, y: usize) -> Vec2d {
+       self.velocities[self.xy_idx(x, y)] 
+    }
+
+    fn xy_idx(&self, x: usize, y: usize) -> usize {
+        y * self.width + x        
     }
 }
