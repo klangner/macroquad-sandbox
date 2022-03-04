@@ -14,10 +14,3 @@ rand = "0.8"
 
 
 [dev-dependencies]
-
-
-[[example]]
-name = "map_viewer"
-
-[[example]]
-name = "fluid_sim"
