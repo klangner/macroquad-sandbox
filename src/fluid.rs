@@ -6,6 +6,14 @@ pub struct Vec2d {
     pub y: f32,
 }
 
+pub struct UniverseBuilder {
+    width: i32,
+    height: i32,
+    velocities: Vec<Vec2d>,
+    densities: Vec<f32>,
+    diffusion_rate: f32,
+}
+
 pub struct Universe {
     width: i32,
     height: i32,
@@ -19,19 +27,53 @@ impl Vec2d {
     pub fn new (x: f32, y: f32) -> Vec2d {
         Vec2d { x, y }
     }
+
+    pub fn zero() -> Vec2d {
+        Vec2d { x: 0.0, y: 0.0 }
+    }
 }
 
-impl Universe {
-    pub fn new(width: i32, height: i32, velocity: Vec2d, density: f32) -> Universe {
-        Universe { 
+impl UniverseBuilder {
+    pub fn new(width: i32, height: i32) -> UniverseBuilder {
+        UniverseBuilder { 
             width,
             height,
-            velocities: vec![velocity; (width*height) as usize], 
-            densities: vec![density; (width*height) as usize],
-            diffusion_rate: 0.01,
+            velocities: vec![Vec2d::zero(); (width*height) as usize], 
+            densities: vec![0.0; (width*height) as usize],
+            diffusion_rate: 0.0,
         }
     }
 
+    /// Set same velocity for all cells
+    pub fn with_velocity(mut self, velocity: Vec2d) -> UniverseBuilder {
+        self.velocities = vec![velocity; (self.width*self.height) as usize];
+        self
+    }
+
+    /// Set same density for all cells
+    pub fn with_density(mut self, density: f32) -> UniverseBuilder {
+        self.densities = vec![density; (self.width*self.height) as usize];
+        self
+    }
+
+    /// Set diffusion rate
+    pub fn with_diffusion_rate(mut self, rate: f32) -> UniverseBuilder {
+        self.diffusion_rate = rate;
+        self
+    }
+
+    pub fn build(&self) -> Universe {
+        Universe {
+            width: self.width,
+            height: self.height,
+            velocities: self.velocities.clone(),
+            densities: self.densities.clone(),
+            diffusion_rate: self.diffusion_rate,
+        }
+    }
+}
+
+impl Universe {
     pub fn width(&self) -> i32 {
         self.width
     }

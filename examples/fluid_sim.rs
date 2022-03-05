@@ -9,15 +9,29 @@ const WINDOW_WIDTH: i32 = 1024;
 const WINDOW_HEIGHT: i32 = 800;
 const UNIVERSE_WIDTH: i32 = 10;
 const UNIVERSE_HEIGHT: i32 = 10;
+const SOURCE_SIZE: i32 = 1;
 
 
-fn plot_universe(universe: &Universe) {
+fn add_particles(dt: f32, x: i32, y: i32, universe: &mut Universe){
+    let source_power = dt  / 1.0;
+    for i in i32::max(x-SOURCE_SIZE+1, 0)..i32::min(x+SOURCE_SIZE, universe.width()) {
+        for j in i32::max(y-SOURCE_SIZE+1, 0)..i32::min(y+SOURCE_SIZE, universe.height()) {
+            universe.increase_density(i as i32, j as i32, source_power);
+        }
+    }
+}
+
+fn draw_universe(universe: &Universe) {
+    clear_background(BLACK);
+    draw_densities(universe);
+    draw_velocities(universe);
+    draw_grid_lines(universe);
+}
+    
+fn draw_densities(universe: &Universe) {
     let cell_dx =  screen_width() / universe.width() as f32;
     let cell_dy = screen_height() / universe.height() as f32;
 
-    clear_background(BLACK);
-
-    // Densities
     for x in 0..universe.width() {
         for y in 0..universe.height() {
             let cx = x as f32 * cell_dx;
@@ -27,8 +41,12 @@ fn plot_universe(universe: &Universe) {
             draw_rectangle(cx, cy, cell_dx, cell_dy, color);
         }
     }
+}
 
-    // Velocities
+fn draw_velocities(universe: &Universe) {
+    let cell_dx =  screen_width() / universe.width() as f32;
+    let cell_dy = screen_height() / universe.height() as f32;
+
     for x in 0..universe.width() {
         for y in 0..universe.height() {
             let cx = cell_dx / 2. + x as f32 * cell_dx;
@@ -38,8 +56,12 @@ fn plot_universe(universe: &Universe) {
             draw_line(cx, cy, cx+v.x*cell_dx/2.0, cy+v.y*cell_dy/2.0, 1.0, RED);
         }
     }
+}
+
+pub fn draw_grid_lines(universe: &Universe) {
+    let cell_dx =  screen_width() / universe.width() as f32;
+    let cell_dy = screen_height() / universe.height() as f32;
     
-    // Grid
     for i in 1..universe.width() {
         let x = i as f32 * cell_dx;
         draw_line(x, 0.0, x, screen_height(), 1.0, DARKGRAY)
@@ -49,6 +71,7 @@ fn plot_universe(universe: &Universe) {
         draw_line(0.0, y, screen_width(), y, 1.0, DARKGRAY)
     }
 }
+
 
 
 fn window_conf() -> Conf {
@@ -63,7 +86,11 @@ fn window_conf() -> Conf {
 
 #[macroquad::main(window_conf)]
 async fn main() {
-    let mut universe = Universe::new(UNIVERSE_WIDTH, UNIVERSE_HEIGHT, Vec2d::new(1., 0.), 0.);
+    let mut universe = UniverseBuilder::new(UNIVERSE_WIDTH, UNIVERSE_HEIGHT)
+        .with_velocity(Vec2d::new(1., 0.))
+        .with_density(0.)
+        .with_diffusion_rate(0.001)
+        .build();
     let cell_dx = screen_width() / universe.width() as f32;
     let cell_dy = screen_height() / universe.height() as f32;
 
@@ -81,13 +108,16 @@ async fn main() {
         // Process mouse
         if is_mouse_button_down(MouseButton::Left) {
             let (mouse_x, mouse_y) = mouse_position();
-            let x = f32::trunc(mouse_x / cell_dx) as usize;
-            let y = f32::trunc(mouse_y / cell_dy) as usize;
-            universe.increase_density(x as i32, y as i32, dt / 1.0);
+            let x = f32::trunc(mouse_x / cell_dx) as i32;
+            let y = f32::trunc(mouse_y / cell_dy) as i32;
+            // println!("x: {}, y: {}", x, y);
+
+            add_particles(dt, x, y, &mut universe);
+    
         }
 
-        // Plot
-        plot_universe(&universe);
+        // Draw universe
+        draw_universe(&universe);
         
         next_frame().await
     }
