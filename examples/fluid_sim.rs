@@ -2,13 +2,13 @@
 //
 
 use macroquad::prelude::*;
-use macroquad_sandbox::fluid::*;
+use macroquad_sandbox::{fluid::*, quad::draw_arrow};
 
 
 const WINDOW_WIDTH: i32 = 1024;
 const WINDOW_HEIGHT: i32 = 800;
-const UNIVERSE_WIDTH: i32 = 10;
-const UNIVERSE_HEIGHT: i32 = 10;
+const UNIVERSE_WIDTH: i32 = 20;
+const UNIVERSE_HEIGHT: i32 = 20;
 const SOURCE_SIZE: i32 = 1;
 
 
@@ -52,8 +52,7 @@ fn draw_velocities(universe: &Universe) {
             let cx = cell_dx / 2. + x as f32 * cell_dx;
             let cy = cell_dy / 2. + y as f32 * cell_dy;
             let v = universe.velocity_at(x, y);
-            draw_circle(cx, cy, 2., BLUE);
-            draw_line(cx, cy, cx+v.x*cell_dx/2.0, cy+v.y*cell_dy/2.0, 1.0, RED);
+            draw_arrow(cx, cy, v.x*cell_dx, v.y*cell_dy, RED);
         }
     }
 }
@@ -87,7 +86,7 @@ fn window_conf() -> Conf {
 #[macroquad::main(window_conf)]
 async fn main() {
     let mut universe = UniverseBuilder::new(UNIVERSE_WIDTH, UNIVERSE_HEIGHT)
-        .with_velocity(Vec2d::new(1., 0.))
+        .with_velocity(Vec2d::new(0.8, 0.0))
         .with_density(0.)
         .with_diffusion_rate(0.001)
         .build();
