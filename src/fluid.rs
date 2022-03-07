@@ -131,17 +131,17 @@ impl Universe {
     // Move fluid along velocity field
     pub fn advect(&mut self, dt: f32) {
         let d0 = self.densities.clone();
-        let dt0 = dt * self.width as f32;
+        let ds = dt * self.width as f32;
 
         for i in 0..self.width as i32 {
             for j in 0..self.height as i32 {
                 let idx = self.xy_idx(i, j);
-                // let x = i - dt0 * self.velocities[idx].x; 
-                // let y = j - dt0 * self.velocities[idx].y;
+                let x = i as f32 - ds * self.velocities[idx].x; 
+                let y = j as f32 - ds * self.velocities[idx].y;
                 // if (x<0.5) x=0.5; 
                 // if (x>N+0.5) x=N+0.5; 
                 // i0=(int)x; 
-                // i1=i0+ 1;
+                // i1=i0+1;
                 // if (y<0.5) y=0.5; 
                 // if (y>N+0.5) y=N+ 0.5; 
                 // j0=(int)y; 
@@ -150,7 +150,7 @@ impl Universe {
                 // s0 = 1-s1; 
                 // t1 = y-j0; 
                 // t0 = 1-t1;
-                // d[IX(i,j)] = s0*(t0*d0[IX(i0,j0)]+t1*d 0[IX(i0,j1)])+s1*(t0*d0[IX(i1,j0)]+t1*d 0[IX(i1,j1)]);
+                // d[IX(i,j)] = s0*(t0*d0[IX(i0,j0)] + t1*d0[IX(i0,j1)]) + s1*(t0*d0[IX(i1,j0)] + t1*d0[IX(i1,j1)]);
             }
         }
     }
