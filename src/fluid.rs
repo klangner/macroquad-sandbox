@@ -129,6 +129,7 @@ impl Universe {
     }
 
     // Move fluid along velocity field
+    #[allow(unused_variables)]
     pub fn advect(&mut self, dt: f32) {
         let d0 = self.densities.clone();
         let ds = dt * self.width as f32;
