@@ -1,6 +1,8 @@
 
 use glam::Vec2;
+use pathfinding::prelude::{absdiff, astar};
 use crate::rts::WorldMap;
+use crate::rts::pathfinding as pf;
 
 
 pub struct Universe {
@@ -27,8 +29,14 @@ impl Universe {
     // Move unit to a given cell on the map
     pub fn move_to(&mut self, x: usize, y: usize) {
         if self.units.len() > 0 {
+            let unit = &self.units[0];
+            let pos = (unit.dest.x as i32, unit.dest.y as i32);
+            let path = pf::find_path(&self.map, pos, (x as i32, y as i32))
+                .into_iter().map(|(i, j)| Vec2::new(i as f32 + 0.5, j as f32 + 0.5))
+                .collect();
+
             let dest = Vec2::new(x as f32 + 0.5, y as f32 + 0.5);
-            self.path.push(dest);
+            self.path = path;
             self.units[0].dest = dest;
         }
     }

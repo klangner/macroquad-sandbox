@@ -12,6 +12,7 @@ macroquad = "0.3"
 mapgen = "0.5"
 rand = "0.8"
 glam="0.20"
+pathfinding = "3.0"
 
 
 [dev-dependencies]

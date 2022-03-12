@@ -81,7 +81,7 @@ async fn main() {
         universe.tick();
 
         // Process mouse
-        if is_mouse_button_down(MouseButton::Left) {
+        if is_mouse_button_pressed(MouseButton::Left) {
             let (x, y) = mouse_position();
             universe.move_to(x as usize * 80 / SCREEN_WIDTH , y as usize * 60 / SCREEN_HEIGHT);
         }
