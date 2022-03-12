@@ -1,11 +1,12 @@
 
 use glam::Vec2;
-use mapgen::Map;
+use crate::rts::WorldMap;
 
 
 pub struct Universe {
-    pub map: Map,
-    pub unit: Unit,
+    pub map: WorldMap,
+    pub units: Vec<Unit>,
+    pub path: Vec<Vec2>,
 }
 
 pub struct Unit {
@@ -14,20 +15,29 @@ pub struct Unit {
 }
 
 impl Universe {
-    pub fn from_map(map: Map) -> Universe {
-        let start_pos = map.starting_point.unwrap();
-        let unit = Unit::new( start_pos.x as f32 + 0.5, start_pos.y as f32 + 0.5); 
-        Universe { map, unit }
+    pub fn from_map(map: WorldMap) -> Universe {
+        Universe { map, units: vec![], path: vec![] }
+    }
+
+    pub fn add_unit(&mut self, pos_x: usize, pos_y: usize) {
+        let unit =  Unit::new(pos_x as f32 + 0.5, pos_y as f32 + 0.5);
+        self.units.push(unit);
     }
 
     // Move unit to a given cell on the map
     pub fn move_to(&mut self, x: usize, y: usize) {
-        self.unit.set_dest(x as f32 + 0.5, y as f32 + 0.5)
+        if self.units.len() > 0 {
+            let dest = Vec2::new(x as f32 + 0.5, y as f32 + 0.5);
+            self.path.push(dest);
+            self.units[0].dest = dest;
+        }
     }
 
     // Clock tick. update sim state
     pub fn tick(&mut self) {
-        self.unit.update_pos(0.1);
+        for unit in &mut self.units {
+            unit.update_pos(0.1);
+        }
     }
 }
 
@@ -40,10 +50,5 @@ impl Unit {
         let dir = (self.dest - self.pos).normalize_or_zero();
         self.pos.x += dir.x * amount;
         self.pos.y += dir.y * amount;
-    }
-    
-    pub fn set_dest(&mut self, x: f32, y: f32) {
-        self.dest.x = x;
-        self.dest.y = y;
     }
 }

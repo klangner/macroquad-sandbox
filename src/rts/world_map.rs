@@ -26,7 +26,7 @@ impl Tile {
         Tile { is_blocked: false }
     }
 
-    pub fn blacked() -> Tile {
+    pub fn blocked() -> Tile {
         Tile { is_blocked: true }
     }
 }
@@ -38,6 +38,17 @@ impl WorldMap {
         let map_tile_count = width*height;
         WorldMap {
             tiles : vec![Tile::new(true); map_tile_count],
+            width,
+            height,
+        }
+    }
+
+    /// Generates map from vector data
+    pub fn from_data(width: usize, height: usize, data: &[bool]) -> WorldMap {
+        assert!(width*height == data.len());
+        let tiles = data.iter().map(|c| if *c {Tile::blocked()} else {Tile::walkable()}).collect();
+        WorldMap {
+            tiles,
             width,
             height,
         }
@@ -67,7 +78,7 @@ impl WorldMap {
     /// Get TileType at the given location
     pub fn at(&self, x: usize, y: usize) -> Tile {
         if x >= self.width || y >= self.height {
-            Tile::blacked()
+            Tile::blocked()
         } else {
             let idx = (y as usize) * self.width + (x as usize);
             self.tiles[idx]
