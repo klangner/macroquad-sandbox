@@ -56,7 +56,7 @@ fn draw(universe: &Universe) {
 
 fn window_conf() -> Conf {
     Conf {
-        window_title: "Movable object".to_owned(),
+        window_title: "RTS".to_owned(),
         fullscreen: false,
         window_width: SCREEN_WIDTH as i32,
         window_height: SCREEN_HEIGHT as i32,

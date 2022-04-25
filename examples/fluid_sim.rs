@@ -109,7 +109,6 @@ async fn main() {
             let (mouse_x, mouse_y) = mouse_position();
             let x = f32::trunc(mouse_x / cell_dx) as i32;
             let y = f32::trunc(mouse_y / cell_dy) as i32;
-            // println!("x: {}, y: {}", x, y);
 
             add_particles(dt, x, y, &mut universe);
     

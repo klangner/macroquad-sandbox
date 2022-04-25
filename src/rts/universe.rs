@@ -1,6 +1,5 @@
 
 use glam::Vec2;
-use pathfinding::prelude::{absdiff, astar};
 use crate::rts::WorldMap;
 use crate::rts::pathfinding as pf;
 

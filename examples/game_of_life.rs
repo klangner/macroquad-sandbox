@@ -32,7 +32,7 @@ fn draw_universe(universe: &Universe) {
 
 fn window_conf() -> Conf {
     Conf {
-        window_title: "Fluid sim".to_owned(),
+        window_title: "Game of life".to_owned(),
         fullscreen: false,
         window_width: WINDOW_WIDTH as i32,
         window_height: WINDOW_HEIGHT as i32,
