@@ -9,8 +9,8 @@ const WINDOW_WIDTH: i32 = 1024;
 const WINDOW_HEIGHT: i32 = 800;
 const BOX_WIDTH: f32 = WINDOW_WIDTH as f32;
 const BOX_HEIGHT: f32 = WINDOW_HEIGHT as f32;
-// const BALL_RADUIS: f32 = 5.0;
-const NUM_BALLS: usize = 100;
+const BALL_RADUIS: f32 = 20.0;
+const NUM_BALLS: usize = 10;
 
 const COLORS: [Color; 25] = [LIGHTGRAY, GRAY, DARKGRAY, YELLOW, GOLD, ORANGE, PINK, RED, MAROON, GREEN, 
                             LIME, DARKGREEN, SKYBLUE, BLUE, DARKBLUE, PURPLE, VIOLET, DARKPURPLE, BEIGE,
@@ -29,7 +29,7 @@ fn window_conf() -> Conf {
 
 #[macroquad::main(window_conf)]
 async fn main() {
-    let mut universe = Universe::random(BOX_WIDTH, BOX_HEIGHT, NUM_BALLS);
+    let mut universe = Universe::random(BOX_WIDTH, BOX_HEIGHT, NUM_BALLS, BALL_RADUIS);
 
     loop {
         universe.tick();
@@ -43,7 +43,9 @@ async fn main() {
         // Draw universe
         clear_background(WHITE);
         for ball in universe.balls() {
-            draw_circle(ball.pos.x, ball.pos.y, ball.radius, COLORS[ball.type_id]);
+            let v = f32::abs(ball.velocity.x) + f32::abs(ball.velocity.y);
+            let idx = usize::min(v as usize, COLORS.len());
+            draw_circle(ball.pos.x, ball.pos.y, ball.radius, COLORS[idx]);
         }
         
         next_frame().await
