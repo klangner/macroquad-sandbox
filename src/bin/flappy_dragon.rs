@@ -4,6 +4,7 @@
 
 use macroquad::prelude::*;
 use macroquad_sandbox::state::GameState;
+use macroquad::rand::gen_range;
 
 const SCREEN_WIDTH: i32 = 800;
 const SCREEN_HEIGHT: i32 = 800;
@@ -50,9 +51,41 @@ impl Player {
     }
 }
 
+struct Obstacle {
+    x: f32,
+    gap_y: f32,
+    size: f32,
+}
+
+impl Obstacle {
+    fn new(x: f32, score: i32 ) -> Self {
+        let gap_y = gen_range(20.0, 400.0);
+        Obstacle { x, gap_y, size: (20 - score) as f32 * 10.0 }
+    }
+
+    fn render(&self, player_x: f32) {
+        let pos_x = self.x - player_x;
+        let half_width = 5.0;
+        if pos_x + half_width > 0.0 {
+            draw_rectangle(pos_x-half_width, 0.0, 2.0*half_width, self.gap_y, DARKGRAY);
+            draw_rectangle(pos_x-half_width, self.gap_y+self.size, 2.0*half_width, SCREEN_HEIGHT as f32, DARKGRAY);
+        }
+    }
+        
+    fn hit_obstacle(&self, player: &Player) -> bool {
+        let half_width = 5.0;
+        let x_match = self.x > - half_width && self.x < half_width;
+        let above_gap = player.y < self.gap_y;
+        let below_gap = player.y > self.gap_y + self.size;
+        x_match && (above_gap || below_gap)
+    }
+}
+
 struct State {
     game_mode: GameMode,
     player: Player,
+    obstacle: Obstacle,
+    score: i32,
 }
 
 impl State {
@@ -60,6 +93,8 @@ impl State {
         State { 
             game_mode: GameMode::Menu,
             player: Player::new(5.0, 25.0),
+            obstacle: Obstacle::new(400.0, 10),
+            score: 0
         }
     }
     
@@ -87,6 +122,8 @@ impl State {
         if self.player.y > SCREEN_HEIGHT as f32 {
             self.game_mode = GameMode::End;
         }
+
+        self.obstacle.render(self.player.x);
     }
     
     fn end(&mut self) {
