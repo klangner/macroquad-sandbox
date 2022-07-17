@@ -8,7 +8,8 @@ use macroquad::rand::gen_range;
 
 const SCREEN_WIDTH: i32 = 800;
 const SCREEN_HEIGHT: i32 = 800;
-const GRAVITY_FORCE: f32 = 2.0;
+const SINK_SPEED: f32 = 100.0;
+const FLAP_SPEED: f32 = 150.0;
 
 enum GameMode {
     Menu,
@@ -19,7 +20,6 @@ enum GameMode {
 struct Player {
     x: f32,
     y: f32,
-    velocity: f32,
 }
 
 impl Player {
@@ -27,7 +27,6 @@ impl Player {
         Player { 
             x,
             y, 
-            velocity: 0.0 
         }
     }
 
@@ -35,19 +34,16 @@ impl Player {
         draw_circle(10.0, self.y, 5.0, RED);
     }
 
-    fn gravity_and_move(&mut self, dt: f32) {
-        if self.velocity < 10.0 * GRAVITY_FORCE { 
-            self.velocity += dt * GRAVITY_FORCE;
+    fn gravity_and_move(&mut self, dt: f32, is_flapping: bool) {
+        if is_flapping {
+            self.y -= dt * FLAP_SPEED;
+        } else {
+            self.y += dt * SINK_SPEED;
         }
-        self.y += self.velocity;
         self.x += 1.0;
         if self.y < 0.0 {
             self.y = 0.0;
         }
-    }
-
-    fn flap(&mut self, dt: f32) {
-        self.velocity -= dt * 2.0 * GRAVITY_FORCE;
     }
 }
 
@@ -114,10 +110,8 @@ impl State {
         clear_background(BLUE);
 
         let dt = get_frame_time();
-        self.player.gravity_and_move(dt);
-        if is_key_down(KeyCode::Space) {
-            self.player.flap(dt);
-        }
+        let is_flapping = is_key_down(KeyCode::Space);
+        self.player.gravity_and_move(dt, is_flapping);
         self.player.render();
         if self.player.y > SCREEN_HEIGHT as f32 {
             self.game_mode = GameMode::End;
