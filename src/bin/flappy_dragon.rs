@@ -1,15 +1,26 @@
 // Flappy Dragon implementation from th book
 // [Hands on Rust](https://pragprog.com/titles/hwrust/hands-on-rust/)
 //
+// What is missing:
+// ================
+// * Hitting object
+// * Scoring
+// * Multiple obstacles
+// * Background objects
+// * Bird animation
+//
+
 
 use macroquad::prelude::*;
 use macroquad_sandbox::state::GameState;
 use macroquad::rand::gen_range;
 
-const SCREEN_WIDTH: i32 = 800;
-const SCREEN_HEIGHT: i32 = 800;
+const SCREEN_WIDTH: i32 = 1024;
+const SCREEN_HEIGHT: i32 = 700;
 const SINK_SPEED: f32 = 100.0;
 const FLAP_SPEED: f32 = 150.0;
+const PLAYER_WIDTH: f32 = 60.0;
+const PLAYER_HEIGHT: f32 = 40.0;
 
 enum GameMode {
     Menu,
@@ -20,18 +31,22 @@ enum GameMode {
 struct Player {
     x: f32,
     y: f32,
+    width: f32,
+    height: f32,
 }
 
 impl Player {
     fn new(x: f32, y: f32) -> Self {
         Player { 
             x,
-            y, 
+            y: y + PLAYER_HEIGHT / 2.0, 
+            width: PLAYER_WIDTH,
+            height: PLAYER_HEIGHT,
         }
     }
 
     fn render(&self) {
-        draw_circle(10.0, self.y, 5.0, RED);
+        draw_rectangle_lines(0.0, self.y-self.height/2.0, self.width, self.height, 4.0, RED);
     }
 
     fn gravity_and_move(&mut self, dt: f32, is_flapping: bool) {
@@ -69,8 +84,8 @@ impl Obstacle {
     }
         
     fn hit_obstacle(&self, player: &Player) -> bool {
-        let half_width = 5.0;
-        let x_match = self.x > - half_width && self.x < half_width;
+        let half_width = player.width;
+        let x_match = self.x > player.x - half_width && self.x < player.x + half_width;
         let above_gap = player.y < self.gap_y;
         let below_gap = player.y > self.gap_y + self.size;
         x_match && (above_gap || below_gap)
@@ -88,7 +103,7 @@ impl State {
     fn new() -> Self {
         State { 
             game_mode: GameMode::Menu,
-            player: Player::new(5.0, 25.0),
+            player: Player::new(0.0, 400.0),
             obstacle: Obstacle::new(400.0, 10),
             score: 0
         }
@@ -108,12 +123,13 @@ impl State {
     
     fn play(&mut self) {
         clear_background(BLUE);
+        draw_text(&format!("Score: {}", self.score), 350.0, 30.0, 30.0, WHITE);
 
         let dt = get_frame_time();
         let is_flapping = is_key_down(KeyCode::Space);
         self.player.gravity_and_move(dt, is_flapping);
         self.player.render();
-        if self.player.y > SCREEN_HEIGHT as f32 {
+        if self.obstacle.hit_obstacle(&self.player) || self.player.y > SCREEN_HEIGHT as f32 {
             self.game_mode = GameMode::End;
         }
 
@@ -122,7 +138,7 @@ impl State {
     
     fn end(&mut self) {
         clear_background(GREEN);
-        draw_text("you are dead", 80.0, 60.0, 50.0, DARKGRAY);
+        draw_text(&format!("Game Over. You score: {}", self.score), 250.0, 60.0, 50.0, DARKGRAY);
         draw_text("(P) Play game", 300.0, 210.0, 30.0, DARKGRAY);
         draw_text("(Q) Quit Game", 300.0, 250.0, 30.0, DARKGRAY);
 
