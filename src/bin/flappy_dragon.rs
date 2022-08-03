@@ -35,6 +35,21 @@ struct Player {
     height: f32,
 }
 
+struct Obstacle {
+    x: f32,
+    gap_y: f32,
+    size: f32,
+    score: i32,
+}
+
+struct State {
+    game_mode: GameMode,
+    player: Player,
+    obstacles: Vec<Obstacle>,
+    score: i32,
+}
+
+
 impl Player {
     fn new(x: f32, y: f32) -> Self {
         Player { 
@@ -62,16 +77,11 @@ impl Player {
     }
 }
 
-struct Obstacle {
-    x: f32,
-    gap_y: f32,
-    size: f32,
-}
 
 impl Obstacle {
     fn new(x: f32, score: i32 ) -> Self {
         let gap_y = gen_range(20.0, 400.0);
-        Obstacle { x, gap_y, size: (20 - score) as f32 * 10.0 }
+        Obstacle { x, gap_y, size: (20 - score) as f32 * 10.0, score }
     }
 
     fn render(&self, player_x: f32) {
@@ -92,19 +102,13 @@ impl Obstacle {
     }
 }
 
-struct State {
-    game_mode: GameMode,
-    player: Player,
-    obstacle: Obstacle,
-    score: i32,
-}
-
 impl State {
     fn new() -> Self {
+        let obstacles = vec![Obstacle::new(400.0, 10), Obstacle::new(800.0, 11), Obstacle::new(1200.0, 12)];
         State { 
             game_mode: GameMode::Menu,
             player: Player::new(0.0, 400.0),
-            obstacle: Obstacle::new(400.0, 10),
+            obstacles: obstacles,
             score: 0
         }
     }
@@ -128,12 +132,24 @@ impl State {
         let dt = get_frame_time();
         let is_flapping = is_key_down(KeyCode::Space);
         self.player.gravity_and_move(dt, is_flapping);
-        self.player.render();
-        if self.obstacle.hit_obstacle(&self.player) || self.player.y > SCREEN_HEIGHT as f32 {
-            self.game_mode = GameMode::End;
+        // check if bird collides
+        for obstacle in self.obstacles.iter() {
+            if obstacle.hit_obstacle(&self.player) || self.player.y > SCREEN_HEIGHT as f32 {
+                self.game_mode = GameMode::End;
+            }
+
+        }
+        // Replace obstacle if needed
+        if self.obstacles[0].x < self.player.x {
+            self.score += self.obstacles[0].score;
+            self.obstacles.remove(0);
+            self.obstacles.push(Obstacle::new(self.player.x + 1200., 10));
         }
 
-        self.obstacle.render(self.player.x);
+        self.player.render();
+        for obstacle in self.obstacles.iter() {
+            obstacle.render(self.player.x);
+        }
     }
     
     fn end(&mut self) {
