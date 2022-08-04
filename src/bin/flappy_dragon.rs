@@ -104,11 +104,10 @@ impl Obstacle {
 
 impl State {
     fn new() -> Self {
-        let obstacles = vec![Obstacle::new(400.0, 10), Obstacle::new(800.0, 11), Obstacle::new(1200.0, 12)];
         State { 
             game_mode: GameMode::Menu,
-            player: Player::new(0.0, 400.0),
-            obstacles: obstacles,
+            player: Player::new(0.0, 0.0),
+            obstacles: Vec::new(),
             score: 0
         }
     }
@@ -121,7 +120,7 @@ impl State {
         draw_text("(Q) Quit Game", 300.0, 250.0, 30.0, DARKGRAY);
 
          if is_key_down(KeyCode::P) {
-            self.restart();
+            self.new_game();
         }
     }
     
@@ -159,13 +158,15 @@ impl State {
         draw_text("(Q) Quit Game", 300.0, 250.0, 30.0, DARKGRAY);
 
          if is_key_down(KeyCode::P) {
-            self.restart();
+            self.new_game();
         }
     }
 
-    fn restart(&mut self) {
+    fn new_game(&mut self) {
         self.player = Player::new(5.0, 25.0);
         self.game_mode = GameMode::Playing;
+        self.obstacles = vec![Obstacle::new(400.0, 10), Obstacle::new(800.0, 11), Obstacle::new(1200.0, 12)];
+        self.score = 0;
     }
 }
 
