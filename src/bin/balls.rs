@@ -1,7 +1,20 @@
-//! Colliding balls
-//! 
+// Balls colliding inside the box
+//
 
-use rand::Rng;
+use macroquad::prelude::*;
+use ::rand::Rng;
+
+
+const WINDOW_WIDTH: i32 = 1024;
+const WINDOW_HEIGHT: i32 = 800;
+const BOX_WIDTH: f32 = WINDOW_WIDTH as f32;
+const BOX_HEIGHT: f32 = WINDOW_HEIGHT as f32;
+const BALL_RADUIS: f32 = 20.0;
+const NUM_BALLS: usize = 10;
+
+const COLORS: [Color; 25] = [LIGHTGRAY, GRAY, DARKGRAY, YELLOW, GOLD, ORANGE, PINK, RED, MAROON, GREEN, 
+                            LIME, DARKGREEN, SKYBLUE, BLUE, DARKBLUE, PURPLE, VIOLET, DARKPURPLE, BEIGE,
+                            BROWN, DARKBROWN, WHITE, BLACK, BLANK, MAGENTA];
 
 
 #[derive(Copy, Clone)]
@@ -29,7 +42,7 @@ impl Ball {
     }
 
     pub fn new_random(width: f32, height: f32, radius: f32) -> Ball {
-        let mut rng = rand::thread_rng();
+        let mut rng = ::rand::thread_rng();
         let x = rng.gen_range(radius..(width-radius));
         let y = rng.gen_range(radius..(height-radius));
         let vx = rng.gen_range(-5.0..5.0);
@@ -66,5 +79,41 @@ impl Universe {
             }
 
         }
+    }
+}
+
+
+fn window_conf() -> Conf {
+    Conf {
+        window_title: "Colliding balls".to_owned(),
+        fullscreen: false,
+        window_width: WINDOW_WIDTH,
+        window_height: WINDOW_HEIGHT,
+        ..Default::default()
+    }
+}
+
+#[macroquad::main(window_conf)]
+async fn main() {
+    let mut universe = Universe::random(BOX_WIDTH, BOX_HEIGHT, NUM_BALLS, BALL_RADUIS);
+
+    loop {
+        universe.tick();
+
+        // Process input
+        #[cfg(not(target_arch = "wasm32"))]
+        if is_key_down(KeyCode::Q) | is_key_down(KeyCode::Escape) {
+            break;
+        }
+
+        // Draw universe
+        clear_background(WHITE);
+        for ball in universe.balls() {
+            let v = f32::abs(ball.velocity.x) + f32::abs(ball.velocity.y);
+            let idx = usize::min(v as usize, COLORS.len());
+            draw_circle(ball.pos.x, ball.pos.y, ball.radius, COLORS[idx]);
+        }
+        
+        next_frame().await
     }
 }

@@ -2,7 +2,10 @@
 //
 
 use macroquad::prelude::*;
-use macroquad_sandbox::{fluid::*, quad::draw_arrow};
+use macroquad_sandbox::{
+    fluid::*, 
+    mqx::drawx::draw_arrow
+};
 
 
 const WINDOW_WIDTH: i32 = 1024;
