@@ -12,7 +12,6 @@
 
 
 use macroquad::prelude::*;
-use macroquad_sandbox::state::GameState;
 use macroquad::rand::gen_range;
 
 const SCREEN_WIDTH: i32 = 1024;
@@ -21,6 +20,11 @@ const SINK_SPEED: f32 = 100.0;
 const FLAP_SPEED: f32 = 150.0;
 const PLAYER_WIDTH: f32 = 60.0;
 const PLAYER_HEIGHT: f32 = 40.0;
+
+pub trait GameState {
+    fn tick(&mut self);
+}
+
 
 enum GameMode {
     Menu,

@@ -3,7 +3,7 @@
 
 use macroquad::prelude::*;
 use macroquad_sandbox::{
-    fluid::*, 
+    fluid::simplified::*, 
     mqx::drawx::draw_arrow
 };
 
