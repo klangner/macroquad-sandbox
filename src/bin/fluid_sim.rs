@@ -114,7 +114,6 @@ async fn main() {
             let y = f32::trunc(mouse_y / cell_dy) as i32;
 
             add_particles(dt, x, y, &mut universe);
-    
         }
 
         // Draw universe
