@@ -23,7 +23,7 @@ fn window_conf() -> Conf {
 #[macroquad::main(window_conf)]
 async fn main() {
 
-    let map =  WorldMap::new(64, 64);
+    let map =  WorldMap::new(24, 18);
 
     loop {
         // let dt = get_frame_time();
