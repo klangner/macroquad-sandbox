@@ -6,6 +6,7 @@ use std::fmt;
 use ::rand::Rng;
 
 
+
 const WINDOW_WIDTH: usize = 1024;
 const WINDOW_HEIGHT: usize = 800;
 const UNIVERSE_WIDTH: usize = WINDOW_HEIGHT / 4;

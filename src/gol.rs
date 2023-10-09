@@ -1,5 +1,0 @@
-//! Game of life engine
-//! 
-
-
-
