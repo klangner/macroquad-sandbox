@@ -3,7 +3,7 @@ use std::io::{BufReader};
 use mp4::{Result};
 
 fn main() -> Result<()> {
-    let file_path = "/Users/klangner/workspace/video/archery/2023-06-24/IMG_2456.MOV";
+    let file_path = std::env::args().nth(1).expect("No video file provided");
     let f = File::open(file_path).unwrap();
     let size = f.metadata()?.len();
     let reader = BufReader::new(f);
