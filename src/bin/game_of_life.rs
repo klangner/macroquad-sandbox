@@ -1,16 +1,19 @@
-// “Escape! Code Your Way Out of a Paper Bag”
-//
-
 use macroquad::prelude::*;
-use std::fmt;
+use std::{fmt, fs};
 use ::rand::Rng;
-
+use serde_derive::Deserialize;
+use anyhow::Result;
 
 
 const WINDOW_WIDTH: usize = 1024;
 const WINDOW_HEIGHT: usize = 800;
-const UNIVERSE_WIDTH: usize = WINDOW_HEIGHT / 4;
-const UNIVERSE_HEIGHT: usize = WINDOW_HEIGHT / 4;
+
+ #[derive(Deserialize, Debug)]
+struct SimParams {
+    width: usize,
+    height: usize,
+    prob: f32,
+}
 
 
 #[repr(u8)]
@@ -157,8 +160,11 @@ fn window_conf() -> Conf {
 }
 
 #[macroquad::main(window_conf)]
-async fn main() {
-    let mut universe = Universe::random(UNIVERSE_WIDTH, UNIVERSE_HEIGHT, 0.5);
+async fn main() -> Result<()> {
+    let param_file = std::env::args().last().expect("No param file provided");
+    let contents = fs::read_to_string(&param_file)?;
+    let params: SimParams = toml::from_str(&contents)?;
+    let mut universe = Universe::random(params.width, params.height, params.prob);
 
     loop {
         universe.tick();
@@ -173,4 +179,6 @@ async fn main() {
         
         next_frame().await
     }
+
+    Ok(())
 }
