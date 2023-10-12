@@ -1,6 +1,7 @@
 use std::fs::File;
-use std::io::{BufReader};
-use mp4::{Result};
+use std::io::BufReader;
+use mp4::Result;
+
 
 fn main() -> Result<()> {
     let file_path = std::env::args().nth(1).expect("No video file provided");

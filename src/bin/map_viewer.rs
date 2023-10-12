@@ -120,7 +120,7 @@ async fn main() {
         if is_key_down(KeyCode::Down) {
             map_view.move_down(dt);
         }
-        // Updaye world (nothing there yet)
+        // Update world (nothing there yet)
         // Draw world
         map_view.draw(&map);
         

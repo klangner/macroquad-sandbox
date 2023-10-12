@@ -146,14 +146,16 @@ async fn main() {
     // let mut number1 = 0.;
 
     let texture: Texture2D = load_texture("assets/ferris.png").await.unwrap();
+        
 
     loop {
         clear_background(WHITE);
 
         root_ui().label(vec2(10., 10.), "Some random text");
-        if widgets::Button::new(texture).position(vec2(10., 40.)).size(vec2(120., 70.)).ui(&mut root_ui()) {
-            println!("hi");
-        }
+    
+        // if widgets::Button::new(texture).position(vec2(10., 40.)).size(vec2(120., 70.)).ui(&mut root_ui()) {
+        //     println!("hi");
+        // }
 
         // widgets::Window::new(hash!(), vec2(470., 50.), vec2(300., 300.))
         //     .label("Megaui Showcase Window")

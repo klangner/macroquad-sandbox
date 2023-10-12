@@ -52,7 +52,7 @@ async fn main() {
         }
 
         draw_map();
-        draw_texture(texture, 0., 0., WHITE);
+        draw_texture(&texture, 0., 0., WHITE);
         
         next_frame().await
     }

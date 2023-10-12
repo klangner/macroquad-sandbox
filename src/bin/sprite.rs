@@ -53,7 +53,7 @@ impl Frames {
                 flip_x: false,
                 flip_y: false,
             };
-        draw_texture_ex(self.texture, pos.x, pos.y, WHITE, params);
+        draw_texture_ex(&self.texture, pos.x, pos.y, WHITE, params);
     }
 }
 
