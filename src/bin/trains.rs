@@ -21,7 +21,12 @@ struct Map {
     width: usize,
     height: usize,
     tiles: Vec<Tile>,
+}
+
+struct World {
+    map: Map,
     track: Vec<Point>,
+    train: Point,
 }
 
 
@@ -44,18 +49,11 @@ impl Default for Map {
         let width = 80;
         let height = 60;
         let tiles = (0..width*height).map(|_|Tile::new(DARKGREEN)).collect();
-        let track = vec![
-            Point::new(100., 100.),
-            Point::new(700., 100.),
-            Point::new(700., 500.),
-            Point::new(100., 500.),
-        ];
 
         Self {
             width,
             height,
             tiles,
-            track,
         }
     }
 }
@@ -64,6 +62,24 @@ impl Map {
     fn tile_at(&self, x: usize, y: usize) -> Option<&Tile> {
         let idx = y * self.width + x;
         self.tiles.get(idx)
+    }
+}
+
+impl Default for World {
+    fn default() -> Self {
+        let track = vec![
+            Point::new(100., 100.),
+            Point::new(700., 100.),
+            Point::new(700., 500.),
+            Point::new(100., 500.),
+        ];
+        let train = Point::new(100., 100.);
+
+        Self { 
+            map: Default::default(), 
+            track, 
+            train,
+        }
     }
 }
 
@@ -116,7 +132,8 @@ impl MapView {
         }
     }
 
-    fn draw(&self, map: &Map) {
+    fn draw(&self, world: &World) {
+        let map = &world.map;
         let cell_dx = self.scale * (WINDOW_WIDTH / map.width) as f32;
         let cell_dy = self.scale * (WINDOW_HEIGHT / map.height) as f32;
 
@@ -133,7 +150,8 @@ impl MapView {
                     cell_dy, color);
             }
         }
-        self.draw_track(&map.track);
+        self.draw_track(&world.track);
+        self.draw_train(&world.train);
     }
     
     fn draw_track(&self, track: &Vec<Point>) {
@@ -145,6 +163,11 @@ impl MapView {
             draw_line(p1.x, p1.y, p2.x, p2.y, thickness, BROWN);
         }
     }
+    
+    fn draw_train(&self, train: &Point) {
+        draw_circle(train.x, train.y, 10., YELLOW);
+    }
+
 }
 
 
@@ -161,7 +184,7 @@ fn window_conf() -> Conf {
 #[macroquad::main(window_conf)]
 async fn main() {
     let mut map_view = MapView::new();
-    let map = Map::default();
+    let world = World::default();
 
     loop {
         let dt = get_frame_time();
@@ -191,7 +214,7 @@ async fn main() {
         }
         // Update world (nothing there yet)
         // Draw world
-        map_view.draw(&map);
+        map_view.draw(&world);
         
         next_frame().await
     }
