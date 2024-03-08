@@ -2,7 +2,6 @@
 
 use macroquad::prelude::*;
 
-
 const WINDOW_WIDTH: usize = 800;
 const WINDOW_HEIGHT: usize = 600;
 
@@ -12,21 +11,24 @@ struct Tile {
     color: Color,
 }
 
-#[derive(Clone)]
-enum Track {
-    EastWest, // ━
-    NorthSouth, // │
-    NorthWest, // ┐
-    NorthEast, // ┌
-    SouthWest, // ┘
-    SouthEast, // └
+struct Point {
+    x: f32,
+    y: f32,
 }
+
 
 struct Map {
     width: usize,
     height: usize,
     tiles: Vec<Tile>,
-    tracks: Vec<Option<Track>>,
+    track: Vec<Point>,
+}
+
+
+impl Point {
+    fn new(x: f32, y: f32) -> Self {
+        Self{ x, y }
+    }
 }
 
 
@@ -36,25 +38,24 @@ impl Tile {
     }
 }
 
+
 impl Default for Map {
     fn default() -> Self {
-        let width = 3;
-        let height = 3;
-        let tiles = vec![Tile::new(LIME); width*height];
-        let mut tracks = vec![None; width*height];
-        tracks[0] = Some(Track::NorthEast);
-        tracks[1] = Some(Track::EastWest);
-        tracks[2] = Some(Track::NorthWest);
-        tracks[3] = Some(Track::NorthSouth);
-        tracks[5] = Some(Track::NorthSouth);
-        tracks[6] = Some(Track::SouthEast);
-        tracks[7] = Some(Track::EastWest);
-        tracks[8] = Some(Track::SouthWest);
+        let width = 80;
+        let height = 60;
+        let tiles = (0..width*height).map(|_|Tile::new(DARKGREEN)).collect();
+        let track = vec![
+            Point::new(100., 100.),
+            Point::new(700., 100.),
+            Point::new(700., 500.),
+            Point::new(100., 500.),
+        ];
+
         Self {
             width,
             height,
             tiles,
-            tracks,
+            track,
         }
     }
 }
@@ -63,11 +64,6 @@ impl Map {
     fn tile_at(&self, x: usize, y: usize) -> Option<&Tile> {
         let idx = y * self.width + x;
         self.tiles.get(idx)
-    }
-
-    fn track_at(&self, x: usize, y: usize) -> Option<&Track> {
-        let idx = y * self.width + x;
-        self.tracks.get(idx).map(|v| v.as_ref()).unwrap_or(None)
     }
 }
 
@@ -135,43 +131,18 @@ impl MapView {
                     rect_y, 
                     cell_dx, 
                     cell_dy, color);
-
-                if let Some(track) = map.track_at(x, y) {
-                    self.draw_track(rect_x, rect_y, cell_dx, cell_dy, track)
-                }
             }
         }
+        self.draw_track(&map.track);
     }
-
-    fn draw_track(&self, x: f32, y: f32, dx: f32, dy: f32, track: &Track) {
-        let center_x = x + dx /2.;
-        let center_y = y + dy /2.;
-        let end_x = x + dx;
-        let end_y = y + dy;
-        let thickness = dy / 25.;
-        match track {
-            Track::EastWest => {
-                draw_line(x, center_y, end_x, center_y, thickness, GRAY);
-            }
-            Track::NorthSouth => {
-                draw_line(center_x, y, center_x, end_y, thickness, GRAY);
-            }
-            Track::NorthWest => {
-                draw_line(center_x, end_y, center_x, center_y, thickness, GRAY);
-                draw_line(center_x, center_y, x, center_y, thickness, GRAY);
-            }
-            Track::NorthEast => {
-                draw_line(center_x, end_y, center_x, center_y, thickness, GRAY);
-                draw_line(center_x, center_y, end_x, center_y, thickness, GRAY);
-            }
-            Track::SouthWest => {
-                draw_line(center_x, y, center_x, center_y, thickness, GRAY);
-                draw_line(center_x, center_y, x, center_y, thickness, GRAY);
-            }
-            Track::SouthEast => {
-                draw_line(center_x, y, center_x, center_y, thickness, GRAY);
-                draw_line(center_x, center_y, end_x, center_y, thickness, GRAY);
-            }
+    
+    fn draw_track(&self, track: &Vec<Point>) {
+        let thickness = 10.;
+        for i in 0..track.len() {
+            let j = if i+1 < track.len() {i+1} else {0};
+            let p1 = &track[i];
+            let p2 = &track[j];
+            draw_line(p1.x, p1.y, p2.x, p2.y, thickness, BROWN);
         }
     }
 }
