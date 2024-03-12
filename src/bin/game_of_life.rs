@@ -31,18 +31,18 @@ pub struct Universe {
 
 impl Universe {
 
-    pub fn new(width: usize, height: usize) -> Universe {
+    pub fn new(width: usize, height: usize) -> Self {
         let cells = vec![Cell::Dead; width*height];
-        Universe {width, height, cells}
+        Self {width, height, cells}
     }
     
-    pub fn random(width: usize, height: usize, prob: f32) -> Universe {
+    pub fn random(width: usize, height: usize, prob: f32) -> Self {
         let mut rng = ::rand::thread_rng();
         let cells = (0..(width*height)).map(|_| 
             if rng.gen_range(0.0..1.0)  > prob {Cell::Alive}
             else {Cell::Dead}
         ).collect();
-        Universe {width, height, cells}
+        Self {width, height, cells}
     }
     
     pub fn width(&self) -> usize {

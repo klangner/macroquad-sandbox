@@ -83,17 +83,23 @@ impl Default for World {
     }
 }
 
+impl World {
+    fn update(&mut self, _dt: f32) {
+
+    }
+}
+
 
 #[derive(Debug)]
-struct MapView {
+struct WorldView {
     scale: f32,
     pos_x: f32,
     pos_y: f32,
 }
 
-impl MapView {
-    pub fn new() -> MapView {
-        MapView {scale: 1., pos_x: 0.0, pos_y: 0.0}
+impl WorldView {
+    pub fn new() -> Self {
+        Self {scale: 1., pos_x: 0.0, pos_y: 0.0}
     }
 
     pub fn zoom_in(&mut self, dt: f32) {
@@ -183,8 +189,8 @@ fn window_conf() -> Conf {
 
 #[macroquad::main(window_conf)]
 async fn main() {
-    let mut map_view = MapView::new();
-    let world = World::default();
+    let mut map_view = WorldView::new();
+    let mut world = World::default();
 
     loop {
         let dt = get_frame_time();
@@ -213,6 +219,7 @@ async fn main() {
             map_view.move_down(dt);
         }
         // Update world (nothing there yet)
+        world.update(dt);
         // Draw world
         map_view.draw(&world);
         

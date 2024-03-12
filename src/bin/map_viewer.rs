@@ -17,8 +17,8 @@ struct MapView {
 }
 
 impl MapView {
-    pub fn new() -> MapView {
-        MapView {scale: 1., pos_x: 0.0, pos_y: 0.0}
+    pub fn new() -> Self {
+        Self {scale: 1., pos_x: 0.0, pos_y: 0.0}
     }
 
     pub fn zoom_in(&mut self, dt: f32) {

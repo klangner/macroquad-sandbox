@@ -37,17 +37,17 @@ pub struct Universe {
 
 
 impl Ball {
-    pub fn new(pos: Vec2d, velocity: Vec2d, radius: f32) -> Ball {
-        Ball {pos, velocity, radius}
+    pub fn new(pos: Vec2d, velocity: Vec2d, radius: f32) -> Self {
+        Self {pos, velocity, radius}
     }
 
-    pub fn new_random(width: f32, height: f32, radius: f32) -> Ball {
+    pub fn new_random(width: f32, height: f32, radius: f32) -> Self {
         let mut rng = ::rand::thread_rng();
         let x = rng.gen_range(radius..(width-radius));
         let y = rng.gen_range(radius..(height-radius));
         let vx = rng.gen_range(-5.0..5.0);
         let vy = rng.gen_range(-5.0..5.0);
-        Ball { 
+        Self { 
             pos: Vec2d { x, y }, 
             velocity: Vec2d { x: vx, y: vy }, 
             radius }
@@ -56,11 +56,11 @@ impl Ball {
 
 impl Universe {
 
-    pub fn random(width: f32, height: f32, num_balls: usize, ball_radius: f32) -> Universe {
+    pub fn random(width: f32, height: f32, num_balls: usize, ball_radius: f32) -> Self {
         let balls = (0..num_balls).map(|_| 
             Ball::new_random(width, height, ball_radius)
         ).collect();
-        Universe {width, height, balls}
+        Self {width, height, balls}
     }
     
     pub fn balls(&self) -> &[Ball] {

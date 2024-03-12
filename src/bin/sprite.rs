@@ -32,8 +32,8 @@ impl FrameSeq {
 }
 
 impl Frames {
-    pub fn new(texture: Texture2D, num_cols: i32, sequences: Vec<FrameSeq>) -> Frames {
-        Frames {
+    pub fn new(texture: Texture2D, num_cols: i32, sequences: Vec<FrameSeq>) -> Self {
+        Self {
             texture,
             num_cols,
             sequences
@@ -58,8 +58,8 @@ impl Frames {
 }
 
 impl<'a> Sprite<'a> {
-    fn new(frames: &'a Frames, fps: f32) -> Sprite {
-        Sprite { frames, fps, time: 0. }
+    fn new(frames: &'a Frames, fps: f32) -> Self {
+        Self { frames, fps, time: 0. }
     }
 
     fn draw(&mut self, pos: Vec2, dt: f32) {

@@ -56,7 +56,7 @@ struct State {
 
 impl Player {
     fn new(x: f32, y: f32) -> Self {
-        Player { 
+        Self { 
             x,
             y: y + PLAYER_HEIGHT / 2.0, 
             width: PLAYER_WIDTH,
@@ -85,7 +85,7 @@ impl Player {
 impl Obstacle {
     fn new(x: f32, score: i32 ) -> Self {
         let gap_y = gen_range(20.0, 400.0);
-        Obstacle { x, gap_y, size: (20 - score) as f32 * 10.0, score }
+        Self { x, gap_y, size: (20 - score) as f32 * 10.0, score }
     }
 
     fn render(&self, player_x: f32) {
@@ -108,7 +108,7 @@ impl Obstacle {
 
 impl State {
     fn new() -> Self {
-        State { 
+        Self { 
             game_mode: GameMode::Menu,
             player: Player::new(0.0, 0.0),
             obstacles: Vec::new(),
