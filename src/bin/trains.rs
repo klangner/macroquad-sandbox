@@ -5,6 +5,8 @@ use macroquad::prelude::*;
 const WINDOW_WIDTH: usize = 800;
 const WINDOW_HEIGHT: usize = 600;
 
+const COLORS: [Color; 10] = [PINK, BLUE, BEIGE, YELLOW, DARKBROWN, ORANGE, PINK, RED, MAROON, DARKPURPLE]; 
+
 
 #[derive(Clone)]
 struct Tile {
@@ -41,10 +43,15 @@ struct TrackPos {
     distance: f32,
 }
 
+struct Train {
+    pos: TrackPos,
+    speed: f32,
+}
+
 struct World {
     map: Map,
     track_network: TrackNetwork,
-    train_pos: TrackPos,
+    trains: Vec<Train>,
 }
 
 
@@ -104,6 +111,19 @@ impl TrackPos {
     }
 }
 
+impl Train {
+    fn new(edge: usize, speed: f32) -> Self {
+        Self { 
+            pos: TrackPos::new(edge, 0.),
+            speed,
+        }
+    }
+
+    fn update_pos(&mut self, new_pos: TrackPos) {
+        self.pos = new_pos;
+    }
+}
+
 impl Default for TrackNetwork {
     fn default() -> Self {
         let nodes = vec![
@@ -145,10 +165,16 @@ impl TrackNetwork {
 
         if new_distance > track.length {
             let new_edge = self.tracks.iter().enumerate()
-                .find(|(i, _)| *i == track.to_node)
+                .find(|(_, t)| t.from_node == track.to_node)
                 .map(|(i, _)| i)
                 .unwrap();
             TrackPos::new(new_edge, pos.distance + distance - track.length)
+        } else if new_distance < 0. {
+            let new_edge = self.tracks.iter().enumerate()
+                .find(|(_, t)| t.to_node == track.from_node)
+                .map(|(i, _)| i)
+                .unwrap();
+            TrackPos::new(new_edge, &self.tracks[new_edge].length + new_distance)
         } else {
             TrackPos::new(pos.edge, pos.distance + distance)
         }
@@ -158,23 +184,28 @@ impl TrackNetwork {
 impl Default for World {
     fn default() -> Self {
         let tracks = TrackNetwork::default();
-        let train_pos = TrackPos::new(0, 0.);
+        let trains = vec![
+            Train::new(0, 50.),
+            Train::new(1, 100.),
+            Train::new(1, 200.),
+            Train::new(2, -10.),
+            Train::new(3, 90.),
+            Train::new(3, -150.),
+        ];
 
         Self { 
             map: Default::default(), 
             track_network: tracks,
-            train_pos,
+            trains,
         }
     }
 }
 
 impl World {
-    fn train_map_pos(&self) -> Point {
-        self.track_network.track_to_map(&self.train_pos)
-    }
-
     fn update(&mut self, dt: f32) {
-        self.train_pos = self.track_network.update_pos(&self.train_pos, 100. * dt);
+        for train in self.trains .iter_mut() {
+            train.update_pos(self.track_network.update_pos(&train.pos, train.speed * dt));
+        }
     }
 }
 
@@ -247,8 +278,10 @@ impl WorldView {
         }
         self.draw_tracks(&world.track_network);
 
-        let pos = world.train_map_pos();
-        self.draw_train(&pos);
+        for (idx, train) in world.trains.iter().enumerate() {
+            let pos = world.track_network.track_to_map(&train.pos);
+            self.draw_train(&pos, COLORS[idx]);
+        }
     }
     
     fn draw_tracks(&self, tracks: &TrackNetwork) {
@@ -260,8 +293,8 @@ impl WorldView {
         }
     }
     
-    fn draw_train(&self, pos: &Point) {
-        draw_circle(pos.x, pos.y, 10., YELLOW);
+    fn draw_train(&self, pos: &Point, color: Color) {
+        draw_circle(pos.x, pos.y, 10., color);
     }
 
 }
