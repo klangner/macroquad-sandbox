@@ -11,6 +11,7 @@ struct Tile {
     color: Color,
 }
 
+#[derive(Clone, Copy)]
 struct Point {
     x: f32,
     y: f32,
@@ -23,9 +24,14 @@ struct Map {
     tiles: Vec<Tile>,
 }
 
+struct TrackNetwork {
+    nodes: Vec<Point>,
+    edges: Vec<(usize, usize)>,
+}
+
 struct World {
     map: Map,
-    track: Vec<Point>,
+    tracks: TrackNetwork,
     train: Point,
 }
 
@@ -65,19 +71,37 @@ impl Map {
     }
 }
 
-impl Default for World {
+impl Default for TrackNetwork {
     fn default() -> Self {
-        let track = vec![
+        let nodes = vec![
             Point::new(100., 100.),
             Point::new(700., 100.),
             Point::new(700., 500.),
             Point::new(100., 500.),
         ];
-        let train = Point::new(100., 100.);
+
+        let edges = vec![
+            (0, 1),
+            (1, 2),
+            (2, 3),
+            (3, 0),
+        ];
+
+        Self {
+            nodes,
+            edges,
+        }
+    }
+}
+
+impl Default for World {
+    fn default() -> Self {
+        let tracks = TrackNetwork::default();
+        let train = tracks.nodes[0];
 
         Self { 
             map: Default::default(), 
-            track, 
+            tracks,
             train,
         }
     }
@@ -156,16 +180,15 @@ impl WorldView {
                     cell_dy, color);
             }
         }
-        self.draw_track(&world.track);
+        self.draw_tracks(&world.tracks);
         self.draw_train(&world.train);
     }
     
-    fn draw_track(&self, track: &Vec<Point>) {
+    fn draw_tracks(&self, tracks: &TrackNetwork) {
         let thickness = 10.;
-        for i in 0..track.len() {
-            let j = if i+1 < track.len() {i+1} else {0};
-            let p1 = &track[i];
-            let p2 = &track[j];
+        for (i, j) in &tracks.edges {
+            let p1 = &tracks.nodes[*i];
+            let p2 = &tracks.nodes[*j];
             draw_line(p1.x, p1.y, p2.x, p2.y, thickness, BROWN);
         }
     }
