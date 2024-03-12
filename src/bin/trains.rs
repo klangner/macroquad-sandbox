@@ -24,15 +24,27 @@ struct Map {
     tiles: Vec<Tile>,
 }
 
+struct Track {
+    from_node: usize,
+    to_node: usize,
+    length: f32,
+}
+
 struct TrackNetwork {
     nodes: Vec<Point>,
-    edges: Vec<(usize, usize)>,
+    tracks: Vec<Track>,
+}
+
+#[derive(Clone, Copy)]
+struct TrackPos {
+    edge: usize,
+    distance: f32,
 }
 
 struct World {
     map: Map,
-    tracks: TrackNetwork,
-    train: Point,
+    track_network: TrackNetwork,
+    train_pos: TrackPos,
 }
 
 
@@ -71,6 +83,27 @@ impl Map {
     }
 }
 
+impl Track {
+    fn new(from_node: usize, to_node: usize, nodes: &Vec<Point>) -> Self {
+        let pos_a = nodes[from_node];
+        let pos_b = nodes[to_node];
+        let dx = pos_b.x - pos_a.x;
+        let dy = pos_b.y - pos_a.y;
+        let length = (dx.powi(2) + dy.powi(2)).sqrt();
+        Self {
+            from_node,
+            to_node,
+            length,
+        }
+    }
+}
+
+impl TrackPos {
+    fn new(edge: usize, distance: f32) -> Self {
+        Self { edge, distance }
+    }
+}
+
 impl Default for TrackNetwork {
     fn default() -> Self {
         let nodes = vec![
@@ -80,16 +113,44 @@ impl Default for TrackNetwork {
             Point::new(100., 500.),
         ];
 
-        let edges = vec![
-            (0, 1),
-            (1, 2),
-            (2, 3),
-            (3, 0),
+        let tracks = vec![
+            Track::new(0, 1, &nodes),
+            Track::new(1, 2, &nodes),
+            Track::new(2, 3, &nodes),
+            Track::new(3, 0, &nodes),
         ];
 
         Self {
             nodes,
-            edges,
+            tracks,
+        }
+    }
+}
+
+impl TrackNetwork {
+    fn track_to_map(&self, track_pos: &TrackPos) -> Point {
+        let track = &self.tracks[track_pos.edge];
+        let pos_a = self.nodes[track.from_node];
+        let pos_b = self.nodes[track.to_node];
+        let dx = pos_b.x - pos_a.x;
+        let dy = pos_b.y - pos_a.y;
+        let frac = track_pos.distance / track.length;
+        let pos_a = self.nodes[track.from_node];
+        Point::new(pos_a.x + frac * dx, pos_a.y + frac * dy)
+    }
+
+    fn update_pos(&self, pos: &TrackPos, distance: f32) -> TrackPos {
+        let track = &self.tracks[pos.edge];
+        let new_distance = pos.distance + distance;
+
+        if new_distance > track.length {
+            let new_edge = self.tracks.iter().enumerate()
+                .find(|(i, _)| *i == track.to_node)
+                .map(|(i, _)| i)
+                .unwrap();
+            TrackPos::new(new_edge, pos.distance + distance - track.length)
+        } else {
+            TrackPos::new(pos.edge, pos.distance + distance)
         }
     }
 }
@@ -97,19 +158,23 @@ impl Default for TrackNetwork {
 impl Default for World {
     fn default() -> Self {
         let tracks = TrackNetwork::default();
-        let train = tracks.nodes[0];
+        let train_pos = TrackPos::new(0, 0.);
 
         Self { 
             map: Default::default(), 
-            tracks,
-            train,
+            track_network: tracks,
+            train_pos,
         }
     }
 }
 
 impl World {
-    fn update(&mut self, _dt: f32) {
+    fn train_map_pos(&self) -> Point {
+        self.track_network.track_to_map(&self.train_pos)
+    }
 
+    fn update(&mut self, dt: f32) {
+        self.train_pos = self.track_network.update_pos(&self.train_pos, 100. * dt);
     }
 }
 
@@ -180,21 +245,23 @@ impl WorldView {
                     cell_dy, color);
             }
         }
-        self.draw_tracks(&world.tracks);
-        self.draw_train(&world.train);
+        self.draw_tracks(&world.track_network);
+
+        let pos = world.train_map_pos();
+        self.draw_train(&pos);
     }
     
     fn draw_tracks(&self, tracks: &TrackNetwork) {
         let thickness = 10.;
-        for (i, j) in &tracks.edges {
-            let p1 = &tracks.nodes[*i];
-            let p2 = &tracks.nodes[*j];
+        for track in &tracks.tracks {
+            let p1 = &tracks.nodes[track.from_node];
+            let p2 = &tracks.nodes[track.to_node];
             draw_line(p1.x, p1.y, p2.x, p2.y, thickness, BROWN);
         }
     }
     
-    fn draw_train(&self, train: &Point) {
-        draw_circle(train.x, train.y, 10., YELLOW);
+    fn draw_train(&self, pos: &Point) {
+        draw_circle(pos.x, pos.y, 10., YELLOW);
     }
 
 }
