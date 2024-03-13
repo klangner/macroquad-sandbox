@@ -1,7 +1,13 @@
 // Draw map on the screen
+//
+// TODO
+// * Lines
+// * Cars 
+// * Circle based lines
+// * Stations
 
 use macroquad::prelude::*;
-use macroquad_sandbox::tracks::{Point, TrackNetwork, TrackPos};
+use macroquad_sandbox::transnet::{Connection, Location, RoutePos, TransNet};
 
 const WINDOW_WIDTH: usize = 800;
 const WINDOW_HEIGHT: usize = 600;
@@ -21,13 +27,13 @@ struct Map {
 }
 
 struct Train {
-    pos: TrackPos,
+    pos: RoutePos,
     speed: f32,
 }
 
 struct World {
     map: Map,
-    track_network: TrackNetwork,
+    trans_net: TransNet,
     trains: Vec<Train>,
 }
 
@@ -63,40 +69,28 @@ impl Map {
 impl Train {
     fn new(speed: f32) -> Self {
         Self { 
-            pos: TrackPos::default(),
+            pos: RoutePos::init(0),
             speed,
         }
     }
 
-    fn update_pos(&mut self, new_pos: TrackPos) {
+    fn update_pos(&mut self, new_pos: RoutePos) {
         self.pos = new_pos;
     }
 }
 
-impl Default for World {
-    fn default() -> Self {
-        let tracks = TrackNetwork::default();
-        let trains = vec![
-            Train::new(50.),
-            Train::new(100.),
-            Train::new(200.),
-            Train::new(-10.),
-            Train::new(90.),
-            Train::new(-150.),
-        ];
-
+impl World {
+    fn new(map: Map, trans_net: TransNet, trains: Vec<Train>) -> Self {
         Self { 
-            map: Default::default(), 
-            track_network: tracks,
+            map, 
+            trans_net,
             trains,
         }
     }
-}
-
-impl World {
+    
     fn update(&mut self, dt: f32) {
         for train in self.trains .iter_mut() {
-            train.update_pos(self.track_network.update_pos(&train.pos, train.speed * dt));
+            train.update_pos(self.trans_net.update_pos(&train.pos, train.speed * dt));
         }
     }
 }
@@ -168,24 +162,24 @@ impl WorldView {
                     cell_dy, color);
             }
         }
-        self.draw_tracks(&world.track_network);
+        self.draw_connections(&world.trans_net);
 
         for (idx, train) in world.trains.iter().enumerate() {
-            let pos = world.track_network.track_to_map(&train.pos);
+            let pos = world.trans_net.track_to_map(&train.pos);
             self.draw_train(&pos, COLORS[idx]);
         }
     }
     
-    fn draw_tracks(&self, tracks: &TrackNetwork) {
-        let thickness = 10.;
-        for track in &tracks.tracks {
-            let p1 = &tracks.nodes[track.from_node];
-            let p2 = &tracks.nodes[track.to_node];
+    fn draw_connections(&self, tracks: &TransNet) {
+        let thickness = 5.;
+        for track in &tracks.connections {
+            let p1 = &tracks.locations[track.from_location];
+            let p2 = &tracks.locations[track.to_location];
             draw_line(p1.x, p1.y, p2.x, p2.y, thickness, BROWN);
         }
     }
     
-    fn draw_train(&self, pos: &Point, color: Color) {
+    fn draw_train(&self, pos: &Location, color: Color) {
         draw_circle(pos.x, pos.y, 10., color);
     }
 
@@ -202,10 +196,38 @@ fn window_conf() -> Conf {
     }
 }
 
+fn init_world() -> World {
+    let locations = vec![
+        Location::new(100., 100.),
+        Location::new(700., 100.),
+        Location::new(700., 500.),
+        Location::new(100., 500.),
+    ];
+
+    let connections = vec![
+        Connection::new(0, 1, &locations),
+        Connection::new(1, 2, &locations),
+        Connection::new(2, 3, &locations),
+        Connection::new(3, 0, &locations),
+    ];
+    let trans_net = TransNet::new(locations, connections);
+
+    let trains = vec![
+            Train::new(50.),
+            Train::new(100.),
+            Train::new(200.),
+            Train::new(10.),
+            Train::new(90.),
+            Train::new(150.),
+        ];
+
+    World::new(Map::default(), trans_net, trains)
+}
+
 #[macroquad::main(window_conf)]
 async fn main() {
     let mut map_view = WorldView::new();
-    let mut world = World::default();
+    let mut world = init_world();
 
     loop {
         let dt = get_frame_time();
