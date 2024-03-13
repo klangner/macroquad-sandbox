@@ -7,7 +7,7 @@
 // * Stations
 
 use macroquad::prelude::*;
-use macroquad_sandbox::transnet::{Connection, Location, RoutePos, TransNet};
+use macroquad_sandbox::transnet::{Edge, Node, GraphPos, Graph};
 
 const WINDOW_WIDTH: usize = 800;
 const WINDOW_HEIGHT: usize = 600;
@@ -27,13 +27,15 @@ struct Map {
 }
 
 struct Train {
-    pos: RoutePos,
+    pos: GraphPos,
     speed: f32,
+    route_id: usize,
 }
 
 struct World {
     map: Map,
-    trans_net: TransNet,
+    trans_net: Graph,
+    routes: Vec<Vec<usize>>,
     trains: Vec<Train>,
 }
 
@@ -67,30 +69,33 @@ impl Map {
 }
 
 impl Train {
-    fn new(speed: f32) -> Self {
+    fn new(speed: f32, station_id: usize, route_id: usize) -> Self {
         Self { 
-            pos: RoutePos::init(0),
+            pos: GraphPos::init(station_id),
             speed,
+            route_id,
         }
     }
 
-    fn update_pos(&mut self, new_pos: RoutePos) {
+    fn update_pos(&mut self, new_pos: GraphPos) {
         self.pos = new_pos;
     }
 }
 
 impl World {
-    fn new(map: Map, trans_net: TransNet, trains: Vec<Train>) -> Self {
+    fn new(map: Map, trans_net: Graph, routes: Vec<Vec<usize>>, trains: Vec<Train>) -> Self {
         Self { 
             map, 
             trans_net,
+            routes,
             trains,
         }
     }
     
     fn update(&mut self, dt: f32) {
         for train in self.trains .iter_mut() {
-            train.update_pos(self.trans_net.update_pos(&train.pos, train.speed * dt));
+            let route = &self.routes[train.route_id];
+            train.update_pos(self.trans_net.update_pos(&train.pos, route, train.speed * dt));
         }
     }
 }
@@ -165,21 +170,21 @@ impl WorldView {
         self.draw_connections(&world.trans_net);
 
         for (idx, train) in world.trains.iter().enumerate() {
-            let pos = world.trans_net.track_to_map(&train.pos);
+            let pos = world.trans_net.pos_to_location(&train.pos);
             self.draw_train(&pos, COLORS[idx]);
         }
     }
     
-    fn draw_connections(&self, tracks: &TransNet) {
+    fn draw_connections(&self, tracks: &Graph) {
         let thickness = 5.;
-        for track in &tracks.connections {
-            let p1 = &tracks.locations[track.from_location];
-            let p2 = &tracks.locations[track.to_location];
+        for track in &tracks.edges {
+            let p1 = &tracks.nodes[track.from_node_id];
+            let p2 = &tracks.nodes[track.to_node_id];
             draw_line(p1.x, p1.y, p2.x, p2.y, thickness, BROWN);
         }
     }
     
-    fn draw_train(&self, pos: &Location, color: Color) {
+    fn draw_train(&self, pos: &Node, color: Color) {
         draw_circle(pos.x, pos.y, 10., color);
     }
 
@@ -197,31 +202,37 @@ fn window_conf() -> Conf {
 }
 
 fn init_world() -> World {
-    let locations = vec![
-        Location::new(100., 100.),
-        Location::new(700., 100.),
-        Location::new(700., 500.),
-        Location::new(100., 500.),
+    let nodes = vec![
+        Node::new(100., 100.),
+        Node::new(700., 100.),
+        Node::new(700., 500.),
+        Node::new(100., 500.),
     ];
 
-    let connections = vec![
-        Connection::new(0, 1, &locations),
-        Connection::new(1, 2, &locations),
-        Connection::new(2, 3, &locations),
-        Connection::new(3, 0, &locations),
+    let edges = vec![
+        Edge::new(0, 1, &nodes),
+        Edge::new(1, 3, &nodes),
+        Edge::new(3, 0, &nodes),
+        Edge::new(1, 2, &nodes),
+        Edge::new(2, 1, &nodes),
     ];
-    let trans_net = TransNet::new(locations, connections);
+    let graph = Graph::new(nodes, edges);
+
+    let routes = vec![
+        vec![0, 1, 2],
+        vec![3, 4],
+    ];
 
     let trains = vec![
-            Train::new(50.),
-            Train::new(100.),
-            Train::new(200.),
-            Train::new(10.),
-            Train::new(90.),
-            Train::new(150.),
+            Train::new(50., 0, 0),
+            Train::new(100., 0, 0),
+            Train::new(200., 0, 0),
+            Train::new(140., 3, 1),
+            Train::new(90., 3, 1),
+            Train::new(150., 0, 0),
         ];
 
-    World::new(Map::default(), trans_net, trains)
+    World::new(Map::default(), graph, routes, trains)
 }
 
 #[macroquad::main(window_conf)]

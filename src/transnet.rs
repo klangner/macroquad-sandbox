@@ -2,96 +2,95 @@
 
 
 #[derive(Clone, Copy)]
-pub struct Location {
+pub struct Node {
     pub x: f32,
     pub y: f32,
 }
 
-pub struct Connection {
-    pub from_location: usize,
-    pub to_location: usize,
+pub struct Edge {
+    pub from_node_id: usize,
+    pub to_node_id: usize,
     length: f32,
 }
 
-pub struct TransNet {
-    pub locations: Vec<Location>,
-    pub connections: Vec<Connection>,
+pub struct Graph {
+    pub nodes: Vec<Node>,
+    pub edges: Vec<Edge>,
 }
 
 #[derive(Clone, Copy)]
-pub struct RoutePos {
-    connection_id: usize,
+pub struct GraphPos {
+    edge_id: usize,
     distance: f32,
 }
 
 
-impl Location {
+impl Node {
     pub fn new(x: f32, y: f32) -> Self {
         Self{ x, y }
     }
 }
 
 
-impl Connection {
-    pub fn new(from_location: usize, to_location: usize, locations: &Vec<Location>) -> Self {
-        let pos_a = locations[from_location];
-        let pos_b = locations[to_location];
+impl Edge {
+    pub fn new(from_node_id: usize, to_node_id: usize, locations: &Vec<Node>) -> Self {
+        let pos_a = locations[from_node_id];
+        let pos_b = locations[to_node_id];
         let dx = pos_b.x - pos_a.x;
         let dy = pos_b.y - pos_a.y;
         let length = (dx.powi(2) + dy.powi(2)).sqrt();
         Self {
-            from_location,
-            to_location,
+            from_node_id,
+            to_node_id,
             length,
         }
     }
 }
 
-impl RoutePos {
-    pub fn init(connection_id: usize) -> Self {
-        Self::new(connection_id, 0.)
+impl GraphPos {
+    pub fn init(edge_id: usize) -> Self {
+        Self::new(edge_id, 0.)
     }
 
-    fn new(connection_id: usize, distance: f32) -> Self {
-        Self { connection_id, distance }
+    fn new(edge_id: usize, distance: f32) -> Self {
+        Self { edge_id, distance }
     }
 }
 
 
-impl TransNet {
-    pub fn new(locations: Vec<Location>, connections: Vec<Connection>) -> Self {
-        Self { locations, connections }
+impl Graph {
+    pub fn new(nodes: Vec<Node>, edges: Vec<Edge>) -> Self {
+        Self { nodes, edges }
     }
 
-    pub fn track_to_map(&self, track_pos: &RoutePos) -> Location {
-        let track = &self.connections[track_pos.connection_id];
-        let pos_a = self.locations[track.from_location];
-        let pos_b = self.locations[track.to_location];
+    pub fn pos_to_location(&self, graph_pos: &GraphPos) -> Node {
+        let track = &self.edges[graph_pos.edge_id];
+        let pos_a = self.nodes[track.from_node_id];
+        let pos_b = self.nodes[track.to_node_id];
         let dx = pos_b.x - pos_a.x;
         let dy = pos_b.y - pos_a.y;
-        let frac = track_pos.distance / track.length;
-        let pos_a = self.locations[track.from_location];
-        Location::new(pos_a.x + frac * dx, pos_a.y + frac * dy)
+        let frac = graph_pos.distance / track.length;
+        let pos_a = self.nodes[track.from_node_id];
+        Node::new(pos_a.x + frac * dx, pos_a.y + frac * dy)
     }
 
-    pub fn update_pos(&self, pos: &RoutePos, distance: f32) -> RoutePos {
-        let track = &self.connections[pos.connection_id];
+    // route is a list of edges
+    pub fn update_pos(&self, pos: &GraphPos, route: &Vec<usize>, distance: f32) -> GraphPos {
+        let track = &self.edges[pos.edge_id];
         let new_distance = pos.distance + distance;
 
         if new_distance > track.length {
-            let new_edge = self.connections.iter().enumerate()
-                .find(|(_, t)| t.from_location == track.to_location)
-                .map(|(i, _)| i)
+            let new_edge = route.iter()
+                .find(|&edge_id| self.edges[*edge_id].from_node_id == track.to_node_id)
                 .unwrap();
-            RoutePos::new(new_edge, pos.distance + distance - track.length)
+            GraphPos::new(*new_edge, pos.distance + distance - track.length)
         } else if new_distance < 0. {
-            let new_edge = self.connections.iter().enumerate()
-                .find(|(_, t)| t.to_location == track.from_location)
-                .map(|(i, _)| i)
+            let new_edge = route.iter()
+                .find(|&edge_id| self.edges[*edge_id].to_node_id == track.from_node_id)
                 .unwrap();
-            RoutePos::new(new_edge, &self.connections[new_edge].length + new_distance)
+            GraphPos::new(*new_edge, &self.edges[*new_edge].length + new_distance)
         } else {
-            RoutePos::new(pos.connection_id, pos.distance + distance)
+            GraphPos::new(pos.edge_id, pos.distance + distance)
         }
     }
 }
