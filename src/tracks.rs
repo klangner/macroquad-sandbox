@@ -47,8 +47,14 @@ impl Track {
     }
 }
 
+impl Default for TrackPos {
+    fn default() -> Self {
+        Self { edge: 0, distance: 0. }
+    }
+}
+
 impl TrackPos {
-    pub fn new(edge: usize, distance: f32) -> Self {
+    fn new(edge: usize, distance: f32) -> Self {
         Self { edge, distance }
     }
 }

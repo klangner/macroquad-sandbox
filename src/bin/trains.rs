@@ -61,9 +61,9 @@ impl Map {
 }
 
 impl Train {
-    fn new(edge: usize, speed: f32) -> Self {
+    fn new(speed: f32) -> Self {
         Self { 
-            pos: TrackPos::new(edge, 0.),
+            pos: TrackPos::default(),
             speed,
         }
     }
@@ -77,12 +77,12 @@ impl Default for World {
     fn default() -> Self {
         let tracks = TrackNetwork::default();
         let trains = vec![
-            Train::new(0, 50.),
-            Train::new(1, 100.),
-            Train::new(1, 200.),
-            Train::new(2, -10.),
-            Train::new(3, 90.),
-            Train::new(3, -150.),
+            Train::new(50.),
+            Train::new(100.),
+            Train::new(200.),
+            Train::new(-10.),
+            Train::new(90.),
+            Train::new(-150.),
         ];
 
         Self { 
