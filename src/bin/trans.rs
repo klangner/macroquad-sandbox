@@ -29,13 +29,13 @@ struct Map {
 struct Train {
     pos: GraphPos,
     speed: f32,
-    route_id: usize,
+    schedule_id: usize,
 }
 
 struct World {
     map: Map,
     trans_net: Graph,
-    routes: Vec<Vec<usize>>,
+    schedules: Vec<Vec<usize>>,
     trains: Vec<Train>,
 }
 
@@ -73,7 +73,7 @@ impl Train {
         Self { 
             pos: GraphPos::init(station_id),
             speed,
-            route_id,
+            schedule_id: route_id,
         }
     }
 
@@ -83,18 +83,18 @@ impl Train {
 }
 
 impl World {
-    fn new(map: Map, trans_net: Graph, routes: Vec<Vec<usize>>, trains: Vec<Train>) -> Self {
+    fn new(map: Map, trans_net: Graph, schedules: Vec<Vec<usize>>, trains: Vec<Train>) -> Self {
         Self { 
             map, 
             trans_net,
-            routes,
+            schedules,
             trains,
         }
     }
     
     fn update(&mut self, dt: f32) {
         for train in self.trains .iter_mut() {
-            let route = &self.routes[train.route_id];
+            let route = &self.schedules[train.schedule_id];
             train.update_pos(self.trans_net.update_pos(&train.pos, route, train.speed * dt));
         }
     }
@@ -214,25 +214,24 @@ fn init_world() -> World {
         Edge::new(1, 3, &nodes),
         Edge::new(3, 0, &nodes),
         Edge::new(1, 2, &nodes),
-        Edge::new(2, 1, &nodes),
     ];
     let graph = Graph::new(nodes, edges);
 
-    let routes = vec![
+    let schedules = vec![
         vec![0, 1, 2],
-        vec![3, 4],
+        vec![3],
+        vec![0, 1],
     ];
 
     let trains = vec![
-            Train::new(50., 0, 0),
-            Train::new(100., 0, 0),
+            // Train::new(100., 0, 0),
             Train::new(200., 0, 0),
             Train::new(140., 3, 1),
-            Train::new(90., 3, 1),
-            Train::new(150., 0, 0),
+            // Train::new(90., 3, 1),
+            Train::new(150., 0, 2),
         ];
 
-    World::new(Map::default(), graph, routes, trains)
+    World::new(Map::default(), graph, schedules, trains)
 }
 
 #[macroquad::main(window_conf)]

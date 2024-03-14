@@ -1,23 +1,25 @@
 // Draw map on the screen
-//
-// TODO
-// * Lines
-// * Cars 
-// * Circle based lines
-// * Stations
 
 use macroquad::prelude::*;
-use macroquad_sandbox::transnet::{Edge, Node, GraphPos, Graph};
+
 
 const WINDOW_WIDTH: usize = 800;
 const WINDOW_HEIGHT: usize = 600;
-
-const COLORS: [Color; 10] = [PINK, BLUE, BEIGE, YELLOW, DARKBROWN, ORANGE, PINK, RED, MAROON, DARKPURPLE]; 
 
 
 #[derive(Clone)]
 struct Tile {
     color: Color,
+}
+
+#[derive(Clone)]
+enum Track {
+    EastWest, // ━
+    NorthSouth, // │
+    NorthWest, // ┐
+    NorthEast, // ┌
+    SouthWest, // ┘
+    SouthEast, // └
 }
 
 struct Map {
@@ -26,17 +28,9 @@ struct Map {
     tiles: Vec<Tile>,
 }
 
-struct Train {
-    pos: GraphPos,
-    speed: f32,
-    route_id: usize,
-}
-
 struct World {
     map: Map,
-    trans_net: Graph,
-    routes: Vec<Vec<usize>>,
-    trains: Vec<Train>,
+    tracks: Vec<Option<Track>>,
 }
 
 
@@ -46,13 +40,8 @@ impl Tile {
     }
 }
 
-
-impl Default for Map {
-    fn default() -> Self {
-        let width = 80;
-        let height = 60;
-        let tiles = (0..width*height).map(|_|Tile::new(DARKGREEN)).collect();
-
+impl Map {
+    fn new(width: usize, height: usize, tiles: Vec<Tile>) -> Self {
         Self {
             width,
             height,
@@ -68,49 +57,33 @@ impl Map {
     }
 }
 
-impl Train {
-    fn new(speed: f32, station_id: usize, route_id: usize) -> Self {
-        Self { 
-            pos: GraphPos::init(station_id),
-            speed,
-            route_id,
-        }
-    }
-
-    fn update_pos(&mut self, new_pos: GraphPos) {
-        self.pos = new_pos;
-    }
-}
 
 impl World {
-    fn new(map: Map, trans_net: Graph, routes: Vec<Vec<usize>>, trains: Vec<Train>) -> Self {
-        Self { 
-            map, 
-            trans_net,
-            routes,
-            trains,
-        }
+    fn new(map: Map, tracks: Vec<Option<Track>>) -> Self {
+        Self { map, tracks }
     }
-    
-    fn update(&mut self, dt: f32) {
-        for train in self.trains .iter_mut() {
-            let route = &self.routes[train.route_id];
-            train.update_pos(self.trans_net.update_pos(&train.pos, route, train.speed * dt));
-        }
+
+    fn track_at(&self, x: usize, y: usize) -> Option<&Track> {
+        let idx = self.xy_to_idx(x, y);
+        self.tracks.get(idx).map(|v| v.as_ref()).unwrap_or(None)
+    }
+
+    fn xy_to_idx(&self, x: usize, y: usize) -> usize {
+        y * self.map.width + x
     }
 }
 
 
 #[derive(Debug)]
-struct WorldView {
+struct MapView {
     scale: f32,
     pos_x: f32,
     pos_y: f32,
 }
 
-impl WorldView {
-    pub fn new() -> Self {
-        Self {scale: 1., pos_x: 0.0, pos_y: 0.0}
+impl MapView {
+    pub fn new() -> MapView {
+        MapView {scale: 1., pos_x: 0.0, pos_y: 0.0}
     }
 
     pub fn zoom_in(&mut self, dt: f32) {
@@ -165,31 +138,75 @@ impl WorldView {
                     rect_y, 
                     cell_dx, 
                     cell_dy, color);
+
+                if let Some(track) = world.track_at(x, y) {
+                    self.draw_track(rect_x, rect_y, cell_dx, cell_dy, track)
+                }
             }
         }
-        self.draw_connections(&world.trans_net);
-
-        for (idx, train) in world.trains.iter().enumerate() {
-            let pos = world.trans_net.pos_to_location(&train.pos);
-            self.draw_train(&pos, COLORS[idx]);
-        }
     }
-    
-    fn draw_connections(&self, tracks: &Graph) {
+
+    fn draw_track(&self, x: f32, y: f32, dx: f32, dy: f32, track: &Track) {
+        let center_x = x + dx /2.;
+        let center_y = y + dy /2.;
+        let end_x = x + dx;
+        let end_y = y + dy;
         let thickness = 5.;
-        for track in &tracks.edges {
-            let p1 = &tracks.nodes[track.from_node_id];
-            let p2 = &tracks.nodes[track.to_node_id];
-            draw_line(p1.x, p1.y, p2.x, p2.y, thickness, BROWN);
+        match track {
+            Track::EastWest => {
+                draw_line(x, center_y, end_x, center_y, thickness, GRAY);
+            }
+            Track::NorthSouth => {
+                draw_line(center_x, y, center_x, end_y, thickness, GRAY);
+            }
+            Track::NorthWest => {
+                draw_line(center_x, end_y, center_x, center_y, thickness, GRAY);
+                draw_line(center_x, center_y, x, center_y, thickness, GRAY);
+            }
+            Track::NorthEast => {
+                draw_line(center_x, end_y, center_x, center_y, thickness, GRAY);
+                draw_line(center_x, center_y, end_x, center_y, thickness, GRAY);
+            }
+            Track::SouthWest => {
+                draw_line(center_x, y, center_x, center_y, thickness, GRAY);
+                draw_line(center_x, center_y, x, center_y, thickness, GRAY);
+            }
+            Track::SouthEast => {
+                draw_line(center_x, y, center_x, center_y, thickness, GRAY);
+                draw_line(center_x, center_y, end_x, center_y, thickness, GRAY);
+            }
         }
     }
-    
-    fn draw_train(&self, pos: &Node, color: Color) {
-        draw_circle(pos.x, pos.y, 10., color);
-    }
-
 }
 
+fn init_world() -> World {
+    let width = 8;
+    let height = 6;
+    let tiles = vec![Tile::new(LIME); width*height];
+    let map = Map::new(width, height, tiles);
+    let mut tracks = vec![None; width*height];
+    tracks[1] = Some(Track::NorthEast);
+    tracks[2] = Some(Track::EastWest);
+    tracks[3] = Some(Track::EastWest);
+    tracks[4] = Some(Track::EastWest);
+    tracks[5] = Some(Track::EastWest);
+    tracks[6] = Some(Track::NorthWest);
+
+    tracks[9] = Some(Track::NorthSouth);
+    tracks[14] = Some(Track::NorthSouth);
+
+    tracks[17] = Some(Track::NorthSouth);
+    tracks[22] = Some(Track::NorthSouth);
+
+    tracks[25] = Some(Track::SouthEast);
+    tracks[26] = Some(Track::EastWest);
+    tracks[27] = Some(Track::EastWest);
+    tracks[28] = Some(Track::EastWest);
+    tracks[29] = Some(Track::EastWest);
+    tracks[30] = Some(Track::SouthWest);
+
+    World::new(map, tracks)
+}
 
 fn window_conf() -> Conf {
     Conf {
@@ -201,44 +218,10 @@ fn window_conf() -> Conf {
     }
 }
 
-fn init_world() -> World {
-    let nodes = vec![
-        Node::new(100., 100.),
-        Node::new(700., 100.),
-        Node::new(700., 500.),
-        Node::new(100., 500.),
-    ];
-
-    let edges = vec![
-        Edge::new(0, 1, &nodes),
-        Edge::new(1, 3, &nodes),
-        Edge::new(3, 0, &nodes),
-        Edge::new(1, 2, &nodes),
-        Edge::new(2, 1, &nodes),
-    ];
-    let graph = Graph::new(nodes, edges);
-
-    let routes = vec![
-        vec![0, 1, 2],
-        vec![3, 4],
-    ];
-
-    let trains = vec![
-            Train::new(50., 0, 0),
-            Train::new(100., 0, 0),
-            Train::new(200., 0, 0),
-            Train::new(140., 3, 1),
-            Train::new(90., 3, 1),
-            Train::new(150., 0, 0),
-        ];
-
-    World::new(Map::default(), graph, routes, trains)
-}
-
 #[macroquad::main(window_conf)]
 async fn main() {
-    let mut map_view = WorldView::new();
-    let mut world = init_world();
+    let mut map_view = MapView::new();
+    let world = init_world();
 
     loop {
         let dt = get_frame_time();
@@ -267,7 +250,6 @@ async fn main() {
             map_view.move_down(dt);
         }
         // Update world (nothing there yet)
-        world.update(dt);
         // Draw world
         map_view.draw(&world);
         

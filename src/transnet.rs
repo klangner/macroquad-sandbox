@@ -80,15 +80,21 @@ impl Graph {
         let new_distance = pos.distance + distance;
 
         if new_distance > track.length {
-            let new_edge = route.iter()
+            if let Some(new_edge) = route.iter()
                 .find(|&edge_id| self.edges[*edge_id].from_node_id == track.to_node_id)
-                .unwrap();
-            GraphPos::new(*new_edge, pos.distance + distance - track.length)
+            {
+                GraphPos::new(*new_edge, pos.distance + distance - track.length)
+            } else {
+                GraphPos::new(pos.edge_id, track.length)
+            }
         } else if new_distance < 0. {
-            let new_edge = route.iter()
+            if let Some(new_edge) = route.iter()
                 .find(|&edge_id| self.edges[*edge_id].to_node_id == track.from_node_id)
-                .unwrap();
-            GraphPos::new(*new_edge, &self.edges[*new_edge].length + new_distance)
+            {
+                GraphPos::new(*new_edge, &self.edges[*new_edge].length + new_distance)
+            } else {
+            GraphPos::new(pos.edge_id, 0.)
+            }
         } else {
             GraphPos::new(pos.edge_id, pos.distance + distance)
         }
