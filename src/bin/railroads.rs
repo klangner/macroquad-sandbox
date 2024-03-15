@@ -14,12 +14,17 @@ struct Tile {
 
 #[derive(Clone)]
 enum Track {
-    EastWest, // ━
-    NorthSouth, // │
-    NorthWest, // ┐
-    NorthEast, // ┌
-    SouthWest, // ┘
-    SouthEast, // └
+    Straight, // ━
+    // NorthSouth, // │
+    // NorthWest, // ┐
+    // NorthEast, // ┌
+    // SouthWest, // ┘
+    // SouthEast, // └
+}
+
+struct TrackPos {
+    track_id: usize,
+    distance: f32,
 }
 
 struct Map {
@@ -28,15 +33,27 @@ struct Map {
     tiles: Vec<Tile>,
 }
 
+struct Train {
+    position: TrackPos,
+    speed: f32,
+}
+
 struct World {
     map: Map,
     tracks: Vec<Option<Track>>,
+    trains: Vec<Train>,
 }
 
 
 impl Tile {
     fn new(color: Color) -> Self {
         Self { color }
+    }
+}
+
+impl TrackPos {
+    fn new(track_id: usize) -> Self {
+        Self { track_id, distance: 0. }
     }
 }
 
@@ -50,26 +67,51 @@ impl Map {
     }
 }
 
+
 impl Map {
     fn tile_at(&self, x: usize, y: usize) -> Option<&Tile> {
         let idx = y * self.width + x;
         self.tiles.get(idx)
     }
+
+    fn xy_to_idx(&self, x: usize, y: usize) -> usize {
+        y * self.width + x
+    }
+}
+
+
+impl Train {
+    fn new(position: TrackPos) -> Self {
+        Self { position, speed: 0. }
+    }
 }
 
 
 impl World {
-    fn new(map: Map, tracks: Vec<Option<Track>>) -> Self {
-        Self { map, tracks }
+    fn new(map: Map) -> Self {
+        let tracks = vec![None; map.width*map.height];
+        Self { map, tracks, trains: vec![] }
+    }
+    
+    fn put_track(&mut self, x: usize, y: usize, track: Track) -> usize {
+        let idx = self.map.xy_to_idx(x, y);
+        if idx < self.tracks.len() {
+            self.tracks[idx] = Some(track);
+        }
+
+        idx
     }
 
     fn track_at(&self, x: usize, y: usize) -> Option<&Track> {
-        let idx = self.xy_to_idx(x, y);
+        let idx = self.map.xy_to_idx(x, y);
         self.tracks.get(idx).map(|v| v.as_ref()).unwrap_or(None)
     }
 
-    fn xy_to_idx(&self, x: usize, y: usize) -> usize {
-        y * self.map.width + x
+    fn add_train(&mut self, train: Train) {
+        self.trains.push(train);
+    }
+
+    fn update(&mut self, _dt: f32) {
     }
 }
 
@@ -147,34 +189,38 @@ impl MapView {
     }
 
     fn draw_track(&self, x: f32, y: f32, dx: f32, dy: f32, track: &Track) {
-        let center_x = x + dx /2.;
+        // let center_x = x + dx /2.;
         let center_y = y + dy /2.;
         let end_x = x + dx;
-        let end_y = y + dy;
-        let thickness = 5.;
+        // let end_y = y + dy;
+        let thickness = 2.;
+        let color = DARKBROWN;
         match track {
-            Track::EastWest => {
-                draw_line(x, center_y, end_x, center_y, thickness, GRAY);
+            Track::Straight => {
+                let up = center_y - 4.;
+                let down = center_y + 4.;
+                draw_line(x, up, end_x, up, thickness, color);
+                draw_line(x, down, end_x, down, thickness, color);
             }
-            Track::NorthSouth => {
-                draw_line(center_x, y, center_x, end_y, thickness, GRAY);
-            }
-            Track::NorthWest => {
-                draw_line(center_x, end_y, center_x, center_y, thickness, GRAY);
-                draw_line(center_x, center_y, x, center_y, thickness, GRAY);
-            }
-            Track::NorthEast => {
-                draw_line(center_x, end_y, center_x, center_y, thickness, GRAY);
-                draw_line(center_x, center_y, end_x, center_y, thickness, GRAY);
-            }
-            Track::SouthWest => {
-                draw_line(center_x, y, center_x, center_y, thickness, GRAY);
-                draw_line(center_x, center_y, x, center_y, thickness, GRAY);
-            }
-            Track::SouthEast => {
-                draw_line(center_x, y, center_x, center_y, thickness, GRAY);
-                draw_line(center_x, center_y, end_x, center_y, thickness, GRAY);
-            }
+            // Track::NorthSouth => {
+            //     draw_line(center_x, y, center_x, end_y, thickness, color);
+            // }
+            // Track::NorthWest => {
+            //     draw_line(center_x, end_y, center_x, center_y, thickness, color);
+            //     draw_line(center_x, center_y, x, center_y, thickness, color);
+            // }
+            // Track::NorthEast => {
+            //     draw_line(center_x, end_y, center_x, center_y, thickness, color);
+            //     draw_line(center_x, center_y, end_x, center_y, thickness, color);
+            // }
+            // Track::SouthWest => {
+            //     draw_line(center_x, y, center_x, center_y, thickness, color);
+            //     draw_line(center_x, center_y, x, center_y, thickness, color);
+            // }
+            // Track::SouthEast => {
+            //     draw_line(center_x, y, center_x, center_y, thickness, color);
+            //     draw_line(center_x, center_y, end_x, center_y, thickness, color);
+            // }
         }
     }
 }
@@ -184,28 +230,18 @@ fn init_world() -> World {
     let height = 6;
     let tiles = vec![Tile::new(LIME); width*height];
     let map = Map::new(width, height, tiles);
-    let mut tracks = vec![None; width*height];
-    tracks[1] = Some(Track::NorthEast);
-    tracks[2] = Some(Track::EastWest);
-    tracks[3] = Some(Track::EastWest);
-    tracks[4] = Some(Track::EastWest);
-    tracks[5] = Some(Track::EastWest);
-    tracks[6] = Some(Track::NorthWest);
+    let mut world = World::new(map);
 
-    tracks[9] = Some(Track::NorthSouth);
-    tracks[14] = Some(Track::NorthSouth);
+    let id = world.put_track(1, 2, Track::Straight);
+    world.put_track(2, 2, Track::Straight);
+    world.put_track(3, 2, Track::Straight);
+    world.put_track(4, 2, Track::Straight);
+    world.put_track(5, 2, Track::Straight);
+    world.put_track(6, 2, Track::Straight);
 
-    tracks[17] = Some(Track::NorthSouth);
-    tracks[22] = Some(Track::NorthSouth);
-
-    tracks[25] = Some(Track::SouthEast);
-    tracks[26] = Some(Track::EastWest);
-    tracks[27] = Some(Track::EastWest);
-    tracks[28] = Some(Track::EastWest);
-    tracks[29] = Some(Track::EastWest);
-    tracks[30] = Some(Track::SouthWest);
-
-    World::new(map, tracks)
+    let train = Train::new(TrackPos::new(id));
+    world.add_train(train);
+    world
 }
 
 fn window_conf() -> Conf {
@@ -221,7 +257,7 @@ fn window_conf() -> Conf {
 #[macroquad::main(window_conf)]
 async fn main() {
     let mut map_view = MapView::new();
-    let world = init_world();
+    let mut world = init_world();
 
     loop {
         let dt = get_frame_time();
@@ -249,7 +285,8 @@ async fn main() {
         if is_key_down(KeyCode::Down) {
             map_view.move_down(dt);
         }
-        // Update world (nothing there yet)
+        // Update world 
+        world.update(dt);
         // Draw world
         map_view.draw(&world);
         
