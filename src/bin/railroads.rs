@@ -193,14 +193,15 @@ impl MapView {
         let center_y = y + dy /2.;
         let end_x = x + dx;
         // let end_y = y + dy;
-        let thickness = 2.;
+        let thickness = 1.;
         let color = DARKBROWN;
         match track {
             Track::Straight => {
                 let up = center_y - 4.;
                 let down = center_y + 4.;
-                draw_line(x, up, end_x, up, thickness, color);
-                draw_line(x, down, end_x, down, thickness, color);
+                draw_line(x, center_y, end_x, center_y, 12., color);
+                draw_line(x, up, end_x, up, thickness, GRAY);
+                draw_line(x, down, end_x, down, thickness, GRAY);
             }
             // Track::NorthSouth => {
             //     draw_line(center_x, y, center_x, end_y, thickness, color);
