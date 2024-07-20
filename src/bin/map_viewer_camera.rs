@@ -1,76 +1,67 @@
 // Draw map on the screen
 
 use macroquad::prelude::*;
-use mapgen::{MapBuilder,Map};
-use mapgen::filter::{BspRooms,NearestCorridors};
+use mapgen::{Map, MapBuilder, MazeBuilder};
 
 
 // Settings
-const WINDOW_WIDTH: usize = 800;
-const WINDOW_HEIGHT: usize = 600;
+const WINDOW_WIDTH: usize = 1280;
+const WINDOW_HEIGHT: usize = 768;
+
+const TILE_SIZE: f32 = 32.;
 
 
 #[derive(Debug)]
 struct MapView {
-    scale: f32,
-    pos_x: f32,
-    pos_y: f32,
+    camera: Camera2D,
 }
 
 impl MapView {
     pub fn new() -> Self {
-        Self {scale: 1., pos_x: 0.0, pos_y: 0.0}
-    }
-
-    pub fn zoom_in(&mut self, dt: f32) {
-        self.scale += dt;
-        if self.scale > 10.0 {
-            self.scale = 10.0
+        let mut camera = Camera2D::from_display_rect(Rect::new(0., 0., WINDOW_WIDTH as f32, WINDOW_HEIGHT as f32));
+        camera.zoom = Vec2::new(2.0 / WINDOW_WIDTH as f32, 2.0 / WINDOW_HEIGHT as f32);
+        Self {
+            camera 
         }
     }
 
-    pub fn zoom_out(&mut self, dt: f32) {
-        self.scale -= dt;
-        if self.scale < 0.1 {
-            self.scale = 0.1
-        }
+    pub fn zoom_in(&mut self, _dt: f32) {
+        self.camera.zoom = Vec2::new(self.camera.zoom.x * 1.1,  self.camera.zoom.y * 1.1);
+    }
+
+    pub fn zoom_out(&mut self, _dt: f32) {
+        self.camera.zoom = Vec2::new(self.camera.zoom.x * 0.9,  self.camera.zoom.y * 0.9);
     }
 
     pub fn move_right(&mut self, dt: f32) {
-        self.pos_x -= 500.0 * dt;
+        self.camera.target.x += 100.0 * dt;
     }
 
     pub fn move_left(&mut self, dt: f32) {
-        self.pos_x += 500.0 * dt;
-        if self.pos_x > 0.0 {
-            self.pos_x = 0.0
-        }
+        self.camera.target.x -= 100.0 * dt;
     }
 
     pub fn move_down(&mut self, dt: f32) {
-        self.pos_y -= 500.0 * dt;
+        self.camera.target.y += 100.0 * dt;
     }
 
     pub fn move_up(&mut self, dt: f32) {
-        self.pos_y += 500.0 * dt;
-        if self.pos_y > 0.0 {
-            self.pos_y = 0.0
-        }
+        self.camera.target.y -= 100.0 * dt;
     }
 
     fn draw(&self, map: &Map) {
-        let cell_dx = self.scale * (WINDOW_WIDTH / map.width) as f32;
-        let cell_dy = self.scale * (WINDOW_HEIGHT / map.height) as f32;
+        set_camera(&self.camera);
 
         clear_background(LIGHTGRAY);
         for x in 0..map.width {
             for y in 0..map.height {
                 let color = if map.at(x, y).is_blocked() { DARKGRAY } else { WHITE };
                 draw_rectangle(
-                    x as f32 * cell_dx + self.pos_x, 
-                    y as f32 * cell_dy + self.pos_y, 
-                    cell_dx, 
-                    cell_dy, color);
+                    x as f32 * TILE_SIZE, 
+                    y as f32 * TILE_SIZE, 
+                    TILE_SIZE, 
+                    TILE_SIZE, 
+                    color);
             }
         }
     }
@@ -90,9 +81,8 @@ fn window_conf() -> Conf {
 #[macroquad::main(window_conf)]
 async fn main() {
     let mut map_view = MapView::new();
-    let map = MapBuilder::new(80, 60)
-        .with(BspRooms::new())
-        .with(NearestCorridors::new())
+    let map = MapBuilder::new(100, 80)
+        .with(MazeBuilder::new())
         .build();  
 
     loop {
@@ -103,6 +93,7 @@ async fn main() {
         if is_key_down(KeyCode::Q) | is_key_down(KeyCode::Escape) {
             break;
         }
+
         if is_key_down(KeyCode::RightBracket) {
             map_view.zoom_in(dt);
         }
