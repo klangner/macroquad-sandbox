@@ -81,7 +81,7 @@ fn window_conf() -> Conf {
 
 #[macroquad::main(window_conf)]
 async fn main() {
-    let mut input: Input = Input::new();
+    let input: Input = Input::new();
     let mut map_view = MapView::new();
     let map = MapBuilder::new(100, 80)
         .with(MazeBuilder::new())
@@ -89,8 +89,6 @@ async fn main() {
 
     loop {
         let dt = get_frame_time();
-
-        input.process();
 
         // Process input aka Controller
         #[cfg(not(target_arch = "wasm32"))]

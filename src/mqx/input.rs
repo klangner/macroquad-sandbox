@@ -1,6 +1,6 @@
-use std::collections::HashSet;
+use std::collections::HashMap;
 
-use macroquad::input::{is_key_down, is_key_pressed, KeyCode};
+use macroquad::input::{is_key_down, KeyCode};
 
 
 #[derive(Eq, Hash, PartialEq)]
@@ -15,45 +15,31 @@ pub enum Action {
 }
 
 pub struct Input {
-    actions: HashSet<Action>,
+    actions: HashMap<Action, Vec<KeyCode>>,
 }
 
 impl Input {
     pub fn new() -> Self {
-        Input { actions: HashSet::default() }
+        let actions: HashMap<Action, Vec<KeyCode>> = vec![
+            (Action::Quit, vec![KeyCode::Q, KeyCode::Escape]),
+            (Action::Left, vec![KeyCode::A, KeyCode::Left]),
+            (Action::Right, vec![KeyCode::D, KeyCode::Right]),
+            (Action::Up, vec![KeyCode::W, KeyCode::Up]),
+            (Action::Down, vec![KeyCode::S, KeyCode::Down]),
+            (Action::ZoomIn, vec![KeyCode::RightBracket]),
+            (Action::ZoomOut, vec![KeyCode::LeftBracket]),
+        ].into_iter().collect();
+
+        Input { actions }
     }    
-
-    // Scan inputs and saved them as actions
-    pub fn process(&mut self) {
-
-        self.actions.clear();
-
-        if is_key_pressed(KeyCode::Q) {
-            self.actions.insert(Action::Quit);
-        }
-
-        if is_key_down(KeyCode::RightBracket) {
-            self.actions.insert(Action::ZoomIn);
-        }
-        if is_key_down(KeyCode::LeftBracket) {
-            self.actions.insert(Action::ZoomOut);
-        }
-        if is_key_down(KeyCode::Left) || is_key_pressed(KeyCode::A) {
-            self.actions.insert(Action::Left);
-        }
-        if is_key_down(KeyCode::Right) || is_key_pressed(KeyCode::D) {
-            self.actions.insert(Action::Right);
-        }
-        if is_key_down(KeyCode::Up) || is_key_pressed(KeyCode::W) {
-            self.actions.insert(Action::Up);
-        }
-        if is_key_down(KeyCode::Down) || is_key_pressed(KeyCode::S) {
-            self.actions.insert(Action::Down);
-        }
-    }
 
     // Check if action was executed
     pub fn is_action_pressed(&self, action: Action) -> bool {
-        self.actions.contains(&action)
+        if let Some(key_codes) = self.actions.get(&action) {
+            key_codes.iter().any(|&k| is_key_down(k))
+        } else {
+            false
+        }
+
     }
 }
