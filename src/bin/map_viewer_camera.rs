@@ -1,6 +1,7 @@
 // Draw map on the screen
 
 use macroquad::prelude::*;
+use macroquad_sandbox::mqx::input::{Action, Input};
 use mapgen::{Map, MapBuilder, MazeBuilder};
 
 
@@ -80,6 +81,7 @@ fn window_conf() -> Conf {
 
 #[macroquad::main(window_conf)]
 async fn main() {
+    let mut input: Input = Input::new();
     let mut map_view = MapView::new();
     let map = MapBuilder::new(100, 80)
         .with(MazeBuilder::new())
@@ -88,30 +90,33 @@ async fn main() {
     loop {
         let dt = get_frame_time();
 
+        input.process();
+
         // Process input aka Controller
         #[cfg(not(target_arch = "wasm32"))]
-        if is_key_down(KeyCode::Q) | is_key_down(KeyCode::Escape) {
+        if input.is_action_pressed(Action::Quit) {
             break;
         }
 
-        if is_key_down(KeyCode::RightBracket) {
+        if input.is_action_pressed(Action::ZoomIn) {
             map_view.zoom_in(dt);
         }
-        if is_key_down(KeyCode::LeftBracket) {
+        if input.is_action_pressed(Action::ZoomOut) {
             map_view.zoom_out(dt);
         }
-        if is_key_down(KeyCode::Left) {
+        if input.is_action_pressed(Action::Left) {
             map_view.move_left(dt);
         }
-        if is_key_down(KeyCode::Right) {
+        if input.is_action_pressed(Action::Right) {
             map_view.move_right(dt);
         }
-        if is_key_down(KeyCode::Up) {
+        if input.is_action_pressed(Action::Up) {
             map_view.move_up(dt);
         }
-        if is_key_down(KeyCode::Down) {
+        if input.is_action_pressed(Action::Down) {
             map_view.move_down(dt);
         }
+
         // Update world (nothing there yet)
         // Draw world
         map_view.draw(&map);
