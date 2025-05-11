@@ -33,3 +33,13 @@ pub fn plot_grid(num_cols: usize, num_rows: usize) {
         draw_line(margin, y, width + margin, y, 1.0, DARKGRAY)
     }
 }
+
+
+pub fn draw_rounded_rectangle(pos: Vec2, size: Vec2, radius: f32, color: Color){
+    draw_rectangle(pos.x, pos.y+radius, size.x, size.y-2.*radius, color);
+    draw_rectangle(pos.x+radius, pos.y, size.x-2.*radius, size.y, color);
+    draw_circle(pos.x+radius, pos.y+radius, radius, color);
+    draw_circle(pos.x+size.x-radius, pos.y+radius, radius, color);
+    draw_circle(pos.x+radius, pos.y+size.y-radius, radius, color);
+    draw_circle(pos.x+size.x-radius, pos.y+size.y-radius, radius, color);
+} 
