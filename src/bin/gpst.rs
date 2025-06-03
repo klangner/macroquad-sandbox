@@ -1,5 +1,14 @@
 // GPS Triangle racing
 //
+// TODO:
+// * Move to separate project
+// * Show core metrics only: Speed, variometer, altitude
+// * Show flight trace
+// * Add thermals (visualize them with background color)
+// * Apply thermals
+// * Working elevator
+// * Aplying ailerons (bank will increase sink)
+// * Stop when altidute = 0
 
 use std::f32::consts::PI;
 
