@@ -8,6 +8,7 @@ const WINDOW_WIDTH: i32 = 1024;
 const WINDOW_HEIGHT: i32 = 800;
 
 
+#[allow(dead_code)]
 #[derive(Copy, Clone)]
 enum TimeSpeed {
     Pause,

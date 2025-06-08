@@ -2,10 +2,11 @@ use macroquad::prelude::*;
 
 use macroquad::ui::{
     hash, root_ui,
-    widgets::{self, Group},
+    widgets::Group,
     Drag, Ui,
 };
 
+#[allow(dead_code)]
 pub struct Slot {
     id: u64,
     item: Option<String>,
@@ -25,12 +26,15 @@ pub enum FittingCommand {
     Refit { target_slot: u64, origin_slot: u64 },
 }
 
+#[allow(dead_code)]
 pub struct Data {
     inventory: Vec<String>,
     item_dragging: bool,
     slots: Vec<(&'static str, Slot)>,
     fit_command: Option<FittingCommand>,
 }
+
+#[allow(dead_code)]
 impl Data {
     pub fn new() -> Data {
         Data {
@@ -145,7 +149,7 @@ async fn main() {
     // let mut number0 = 0.;
     // let mut number1 = 0.;
 
-    let texture: Texture2D = load_texture("assets/ferris.png").await.unwrap();
+    // let texture: Texture2D = load_texture("assets/ferris.png").await.unwrap();
         
 
     loop {

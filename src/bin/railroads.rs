@@ -22,6 +22,7 @@ enum Track {
     // SouthEast, // └
 }
 
+#[allow(dead_code)]
 struct TrackPos {
     track_id: usize,
     distance: f32,
@@ -33,6 +34,7 @@ struct Map {
     tiles: Vec<Tile>,
 }
 
+#[allow(dead_code)]
 struct Train {
     position: TrackPos,
     speed: f32,
