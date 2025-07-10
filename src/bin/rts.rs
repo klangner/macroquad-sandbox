@@ -49,7 +49,8 @@ fn draw(universe: &Universe) {
     }
 
     for unit in &universe.units {
-        draw_circle(unit.pos.x * cell_dx, unit.pos.y * cell_dy, 5.0, BLUE);
+        let color = if unit.is_moving { RED } else { BLUE };
+        draw_circle(unit.pos.x * cell_dx, unit.pos.y * cell_dy, 5.0, color);
     }
 }
 
